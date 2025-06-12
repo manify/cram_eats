@@ -4,6 +4,7 @@ import Button from '../components/ui/button';
 import Input, { InputField } from '../components/ui/input';
 import signUp from '../api/auth/signUp';
 import { SignUpButton } from '../components/ui/SignUpButton';
+import { SignInLink } from '../components/ui/SignInLink';
 
 // LoginHeader component with square corners
 function LoginHeader() {
@@ -20,6 +21,10 @@ export default function SignUp() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const navigate = useNavigate();
+
+  const handleSignUpClick = () => {
+    navigate('/signin');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,6 +77,7 @@ export default function SignUp() {
               disabled={!email || !password} 
             />
           </form>
+          <SignInLink onSignInClick={handleSignUpClick} />
         </section>
       </div>
     </main>
