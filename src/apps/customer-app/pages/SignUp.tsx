@@ -5,6 +5,7 @@ import Input, { InputField } from '../components/ui/input';
 import signUp from '../api/auth/signUp';
 import { LoginHeader } from '../components/ui/LoginHeader';
 import { SignUpButton } from '../components/ui/SignUpButton';
+import { SignInLink } from '../components/ui/SignInLink';
 
 
 export default function SignUp() {
@@ -12,6 +13,10 @@ export default function SignUp() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const navigate = useNavigate();
+
+  const handleSignUpClick = () => {
+    navigate('/signin');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +67,7 @@ export default function SignUp() {
                onClick={() => handleSubmit}
           disabled={!email || !password} />
           </form>
+          <SignInLink onSignInClick={handleSignUpClick} />
         </section>
       </div>
     </main>
