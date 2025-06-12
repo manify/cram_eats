@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/ui/button';
-import Input from '../components/ui/input';
+import Input, { InputField } from '../components/ui/input';
 import signUp from '../api/auth/signUp';
+import { LoginHeader } from '../components/ui/LoginHeader';
+import { SignUpButton } from '../components/ui/SignUpButton';
+
 
 export default function SignUp() {
   const [email, setEmail] = useState('');
@@ -24,36 +27,43 @@ export default function SignUp() {
     }
   };
 
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Sign Up</h2>
-        <Input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setEmail(e.target.value)}
-          required
-          className="mb-4"
-        />
-        <Input
+    <main className="flex justify-center items-center p-5 min-h-screen bg-neutral-100 max-sm:p-2.5">
+      <div className="overflow-hidden relative bg-white rounded-2xl shadow-lg h-[695px] w-[896px] max-md:h-auto max-md:max-w-[600px] max-md:min-h-[600px] max-md:w-[90%] max-sm:w-full max-sm:h-auto max-sm:max-w-[400px] max-sm:min-h-[500px]">
+        <LoginHeader />
+
+        <section className="px-56 pt-9 pb-0 max-md:px-10 max-md:pt-9 max-md:pb-10 max-sm:px-8 max-sm:pt-6 max-sm:pb-8">
+          <form onSubmit={handleSubmit}>
+            <InputField
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={setEmail} label={''}            />
+
+               <InputField
+          label="Password"
           type="password"
           placeholder="Password"
           value={password}
-          onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setPassword(e.target.value)}
-          required
-          className="mb-4"
+          onChange={setPassword}
+
         />
-        <Input
+        <InputField
+          label="Confirm Password"
           type="password"
           placeholder="Confirm Password"
           value={confirmPassword}
-          onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setConfirmPassword(e.target.value)}
-          required
-          className="mb-4"
+          onChange={setConfirmPassword}
+          showPasswordToggle={false}
         />
-        <Button type="submit" className="w-full">Sign Up</Button>
-      </form>
-    </div>
+
+            <SignUpButton 
+               onClick={() => handleSubmit}
+          disabled={!email || !password} />
+          </form>
+        </section>
+      </div>
+    </main>
   );
 }
