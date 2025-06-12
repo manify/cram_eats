@@ -3,9 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import Button from '../components/ui/button';
 import Input, { InputField } from '../components/ui/input';
 import signUp from '../api/auth/signUp';
-import { LoginHeader } from '../components/ui/LoginHeader';
 import { SignUpButton } from '../components/ui/SignUpButton';
 
+// LoginHeader component with square corners
+function LoginHeader() {
+  return (
+    <div className="bg-green-400 text-white text-center py-8 rounded-none">
+      <h1 className="text-2xl font-semibold">Welcome Back</h1>
+      <p className="text-lg">Sign in to your account</p>
+    </div>
+  );
+}
 
 export default function SignUp() {
   const [email, setEmail] = useState('');
@@ -27,7 +35,6 @@ export default function SignUp() {
     }
   };
 
-
   return (
     <main className="flex justify-center items-center p-5 min-h-screen bg-neutral-100 max-sm:p-2.5">
       <div className="overflow-hidden relative bg-white rounded-2xl shadow-lg h-[695px] w-[896px] max-md:h-auto max-md:max-w-[600px] max-md:min-h-[600px] max-md:w-[90%] max-sm:w-full max-sm:h-auto max-sm:max-w-[400px] max-sm:min-h-[500px]">
@@ -39,28 +46,31 @@ export default function SignUp() {
               type="email"
               placeholder="Email"
               value={email}
-              onChange={setEmail} label={''}            />
+              onChange={setEmail} 
+              label={'Email Address'}
+            />
 
-               <InputField
-          label="Password"
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={setPassword}
+            <InputField
+              label="Password"
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={setPassword}
+            />
 
-        />
-        <InputField
-          label="Confirm Password"
-          type="password"
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChange={setConfirmPassword}
-          showPasswordToggle={false}
-        />
+            <InputField
+              label="Confirm Password"
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              showPasswordToggle={false}
+            />
 
             <SignUpButton 
-               onClick={() => handleSubmit}
-          disabled={!email || !password} />
+              onClick={() => handleSubmit}
+              disabled={!email || !password} 
+            />
           </form>
         </section>
       </div>
