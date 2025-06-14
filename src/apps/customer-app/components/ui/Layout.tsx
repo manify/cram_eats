@@ -1,5 +1,6 @@
 import React from 'react';
 import Header from './Header';
+import Footer from './Footer';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -7,9 +8,12 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="relative min-h-screen">
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="pt-32">{children}</main> {/* Add padding to avoid overlap */}
+      <main className="flex-grow pt-20">
+        {children}
+      </main>
+      <Footer />
     </div>
   );
 };

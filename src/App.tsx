@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import SignIn from '../src/apps/customer-app/pages/SignIn';
 import SignUp from './apps/customer-app/pages/SignUp';
 import LandingPage from './apps/customer-app/pages/LandingPage';
+import BecomePartner from './apps/customer-app/pages/BecomePartner';
 
 
 
@@ -17,6 +18,7 @@ function App() {
         {/* Authentication Routes */}
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp/>} />
+        <Route path="/becomepartner" element={<BecomePartner/>}/>
 
         <Route path="/dashboard" element={<div className="p-4 text-xl">Welcome to the Dashboard</div>} />
       </Routes>
