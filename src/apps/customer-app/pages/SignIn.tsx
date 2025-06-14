@@ -9,6 +9,8 @@ import { SignInButton } from "../components/ui/SignInButton";
 import { SignUpLink } from "../components/ui/SignUpLink";
 
 import signIn from "../api/auth/signIn";
+import Header from "../components/ui/Header";
+import Layout from "../components/ui/Layout";
 
 // Header of the sign-in page
 function LoginHeader() {
@@ -59,6 +61,7 @@ export default function SignIn() {
 
   return (
     <main className="flex justify-center items-center p-5 min-h-screen bg-neutral-100 max-sm:p-2.5">
+      <Layout>
       <div className="overflow-hidden relative bg-white rounded-2xl shadow-lg h-[516px] w-[896px] max-md:h-auto max-md:max-w-[600px] max-md:min-h-[500px] max-md:w-[90%] max-sm:w-full max-sm:h-auto max-sm:min-h-[480px]">
         <LoginHeader />
 
@@ -93,6 +96,7 @@ export default function SignIn() {
 
         <SignUpLink onSignUpClick={handleSignUpClick} />
       </div>
+    </Layout>
     </main>
   );
 }
