@@ -1,4 +1,4 @@
-// File: apps/customer-app/App.tsx
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import SignIn from '../src/apps/customer-app/pages/SignIn';
