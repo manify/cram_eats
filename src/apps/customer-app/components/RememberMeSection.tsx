@@ -1,16 +1,22 @@
+"use client";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
-type Props = {
+interface Props {
   rememberMe: boolean;
   onRememberMeChange: () => void;
-  onForgotPasswordClick: () => void;
-};
+}
 
 export function RememberMeSection({
   rememberMe,
   onRememberMeChange,
-  onForgotPasswordClick,
 }: Props) {
+  const navigate = useNavigate();
+
+  const handleForgotPasswordClick = () => {
+    navigate("/forgot-password");
+  };
+
   return (
     <div className="flex items-center justify-between mt-4 mb-6">
       <label className="flex items-center space-x-2 cursor-pointer">
@@ -24,7 +30,7 @@ export function RememberMeSection({
       </label>
       <button
         type="button"
-        onClick={onForgotPasswordClick}
+        onClick={handleForgotPasswordClick}
         className="text-sm text-green-500 hover:underline"
       >
         Forgot password?
