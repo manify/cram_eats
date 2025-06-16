@@ -1,4 +1,4 @@
-// File: apps/customer-app/App.tsx
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import SignIn from '../src/apps/customer-app/pages/SignIn';
@@ -30,6 +30,12 @@ function App() {
         <Route path="/orders" element={<Orders />} />
 
 
+        <Route path="/dashboard" element={<div className="p-4 text-xl">Welcome to the Dashboard</div>} />
+        <Route path="/restaurantsignin"  element={<SignInRestaurant/>}/>      
+        <Route path="/restaurant-signup" element={<SignUpRestaurant />} />
+        
+        {/* Restaurant Dashboard */}
+        <Route path="/restaurantdashboard"  element={<RestaurantDashboard/>}/>      
       </Routes>
     </Router>
   );
