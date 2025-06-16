@@ -3,15 +3,17 @@ import * as React from "react";
 
 import { AccountTypeSelector } from "../components/AccountTypeSelector";
 import { SignInForm } from "./SignInForm";
+import Layout from "../../customer-app/components/ui/Layout";
 
 
 export function SignInRestaurant() {
   const [selectedAccountType, setSelectedAccountType] = React.useState<'restaurant' | 'driver'>('restaurant');
 
   return (
+    <Layout>
     <div className="overflow-hidden bg-white">
       <div className="flex flex-col items-center pt-4 w-full bg-yellow-50 max-md:max-w-full">
-        
+       
 
         <main className="flex flex-col items-center">
           <section className="text-center mt-11 max-md:mt-10">
@@ -31,9 +33,10 @@ export function SignInRestaurant() {
           <SignInForm />
         </main>
 
-       
+  
       </div>
     </div>
+    </Layout>
   );
 }
 

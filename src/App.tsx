@@ -6,6 +6,10 @@ import SignUp from './apps/customer-app/pages/SignUp';
 import ForgotPassword from './apps/customer-app/pages/ForgotPassword';
 import LandingPage from './apps/customer-app/pages/LandingPage';
 import BecomePartner from './apps/customer-app/pages/BecomePartner';
+import SignInRestaurant from './apps/restaurant-app/pages/SignInRestaurant';
+
+import { RestaurantDashboard } from './apps/restaurant-app/pages/RestaurantDashboard';
+import { SignUpRestaurant } from './apps/restaurant-app/pages/SignUpRestaurant';
 
 
 
@@ -24,6 +28,11 @@ function App() {
         <Route path="/becomepartner" element={<BecomePartner/>}/>
 
         <Route path="/dashboard" element={<div className="p-4 text-xl">Welcome to the Dashboard</div>} />
+        <Route path="/restaurantsignin"  element={<SignInRestaurant/>}/>      
+        <Route path="/restaurant-signup" element={<SignUpRestaurant />} />
+        
+        {/* Restaurant Dashboard */}
+        <Route path="/restaurantdashboard"  element={<RestaurantDashboard/>}/>      
       </Routes>
     </Router>
   );
