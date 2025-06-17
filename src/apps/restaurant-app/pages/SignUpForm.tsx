@@ -13,9 +13,9 @@ export const SignUpForm: React.FC = () => {
 const navigate = useNavigate();
 
   const handleSignUpClick = () => {
-    navigate('/restaurant-dashboard');
+    navigate('/restaurantdashboard');
   };
-  
+
   const [formData, setFormData] = React.useState({
     // Personal Information
     firstName: '',
