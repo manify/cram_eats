@@ -27,18 +27,23 @@ export default function SignUp() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      alert("Passwords don't match");
-      return;
-    }
-    try {
-      await signUp(email, password);
-      navigate('/dashboard');
-    } catch (error) {
-      alert('Error creating account');
-    }
-  };
+  e.preventDefault();
+  if (password !== confirmPassword) {
+    alert("Passwords don't match");
+    return;
+  }
+  try {
+    await signUp(email, password);
+
+    const name = email.split('@')[0];
+    localStorage.setItem("userName", name);
+
+    navigate('/dashboard');
+  } catch (error) {
+    alert('Error creating account');
+  }
+};
+
 
   return (
     <main className="flex justify-center items-center p-5 min-h-screen bg-neutral-100 max-sm:p-2.5">

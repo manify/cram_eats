@@ -281,7 +281,8 @@ export default function LandingPage() {
   return (
     <Layout>
       <div className="flex overflow-hidden flex-col items-center pt-6 bg-stone-50">
-        <div className="flex flex-col pt-9 pb-24 pl-16 w-full bg-yellow-50 max-w-[1470px] rounded-[40px] max-md:pl-5 max-md:max-w-full">
+        <div className="flex flex-col pt-9 pb-24 pl-16 w-full bg-yellow-50 max-w-[1470px] rounded-[40px] max-md:pl-5 max-md:max-w-full rounded-t-[70px]">
+
           
           <HeroSection />
         </div>

@@ -5,6 +5,9 @@ import SignUp from './apps/customer-app/pages/SignUp';
 import ForgotPassword from './apps/customer-app/pages/ForgotPassword';
 import LandingPage from './apps/customer-app/pages/LandingPage';
 import BecomePartner from './apps/customer-app/pages/BecomePartner';
+import Dashboard from './apps/customer-app/pages/Dashboard';
+import RestaurantPage from './apps/customer-app/pages/RestaurantPage';
+import Orders from './apps/customer-app/pages/Orders';
 import SignInRestaurant from './apps/restaurant-app/pages/SignInRestaurant';
 
 import {RestaurantDashboard} from './apps/restaurant-app/pages/RestaurantDashboard';
@@ -48,8 +51,13 @@ function App() {
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp/>} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-
+        
         <Route path="/becomepartner" element={<BecomePartner/>}/>
+
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/restaurant/:id" element={<RestaurantPage />} />
+        <Route path="/orders" element={<Orders />} />
+
 
         <Route path="/dashboard2" element={<div className="p-4 text-xl">Welcome to the Dashboard</div>} />
         <Route path="/restaurantsignin"  element={<SignInRestaurant/>}/>      

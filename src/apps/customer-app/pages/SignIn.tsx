@@ -33,23 +33,26 @@ export default function SignIn() {
     navigate('/signup');
   };
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    try {
-      await signIn(email, password);
+ const handleSubmit = async (e?: React.FormEvent) => {
+  if (e) e.preventDefault();
+  try {
+    await signIn(email, password);
 
-      // Handle "remember me"
-      if (rememberMe) {
-        localStorage.setItem("rememberedEmail", email);
-      } else {
-        localStorage.removeItem("rememberedEmail");
-      }
+    const name = email.split('@')[0]; // extract name from email
+    localStorage.setItem("userName", name);
 
-      navigate('/dashboard');
-    } catch (error) {
-      alert('Invalid credentials');
+    if (rememberMe) {
+      localStorage.setItem("rememberedEmail", email);
+    } else {
+      localStorage.removeItem("rememberedEmail");
     }
-  };
+
+    navigate('/dashboard');
+  } catch (error) {
+    alert('Invalid credentials');
+  }
+};
+
 
   useEffect(() => {
     const savedEmail = localStorage.getItem("rememberedEmail");
