@@ -39,9 +39,8 @@ export default function Header({ colorFilter, setColorFilter }: HeaderProps) {
             <Link to="/" className="text-neutral-800 hover:text-amber-500 transition-colors font-medium">
               Home
             </Link>
-            <Link to="/menu" className="text-neutral-800 hover:text-amber-500 transition-colors font-medium">
-              Menu
-            </Link>
+            
+            
             <Link to="/contact" className="text-neutral-800 hover:text-amber-500 transition-colors font-medium">
               Contact
             </Link>
@@ -104,13 +103,7 @@ export default function Header({ colorFilter, setColorFilter }: HeaderProps) {
             >
               Home
             </Link>
-            <Link
-              to="/menu"
-              className="p-3 text-neutral-800 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Menu
-            </Link>
+            
             <Link
               to="/contact"
               className="p-3 text-neutral-800 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"

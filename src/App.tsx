@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import ContactPage from './apps/customer-app/pages/ContactPage';
+import RestoPage from './apps/customer-app/pages/RestoPage';
+
 
 /* ─── Customer-side pages ─────────────────────────────── */
 import LandingPage from './apps/customer-app/pages/LandingPage';
@@ -82,6 +85,9 @@ const AppContent: React.FC = () => {
         <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
         <Route path="/cart" element={<Cart />} />
 
+        {/* your other routes */}
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/restaurants" element={<RestoPage />} />
         {/* ─── Customer Dashboard (Nested Routes) ─── */}
         <Route path="/dashboard" element={<Dashboard />}>
           <Route index element={<Navigate to="home" replace />} />
