@@ -1,0 +1,1 @@
+export type ViewType = 'dashboard' | 'orders' | 'menu' | 'items' | 'reviews' | 'stats' | 'account';
