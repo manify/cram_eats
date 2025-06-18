@@ -4,6 +4,7 @@ import {
   FiHome, FiUser, FiBell, FiMapPin,
   FiSearch, FiShoppingCart, FiFileText, FiX,
 } from 'react-icons/fi';
+import { MdSearch } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
@@ -16,6 +17,10 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const storedName = localStorage.getItem("userName") || localStorage.getItem("userEmail")?.split("@")[0] || "Guest";
   const userInitial = storedName.charAt(0).toUpperCase();
+  const SearchIcon = FiSearch as unknown as React.FC<React.SVGProps<SVGSVGElement>>;
+  const CartIcon = FiShoppingCart as unknown as React.FC<React.SVGProps<SVGSVGElement>>;
+  const XIcon = FiX as unknown as React.FC<React.SVGProps<SVGSVGElement>>;
+  
 
   const featuredRestaurants = [
     { name: 'The Italian Place', rating: '4.5(1200+)', image: '/assets/italian.jpg', id: 1 },
@@ -94,14 +99,14 @@ export default function Dashboard() {
         <main className="flex-1 p-8 space-y-6">
           <header className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex w-full md:w-1/2 items-center bg-yellow-50 px-4 py-2 rounded-xl border border-gray-200">
-              <FiSearch className="text-gray-400 mr-2" />
+              <SearchIcon className="text-gray-400 mr-2" />
               <input type="text" placeholder="Search for restaurants or cuisines" className="bg-transparent w-full text-sm text-pink-800 placeholder-green-400 focus:outline-none" />
             </div>
             <div className="flex items-center space-x-4">
               <div className="bg-yellow-50 px-4 py-2 rounded-xl border border-gray-200 text-green-400 text-sm">
                 {location}
               </div>
-              <button className="w-10 h-10 rounded-full bg-gray-100 border"><FiShoppingCart /></button>
+              <button className="w-10 h-10 rounded-full bg-gray-100 border"><CartIcon /></button>
             </div>
           </header>
 
@@ -162,7 +167,7 @@ export default function Dashboard() {
               Edit Profile
             </div>
             <button onClick={() => setShowProfileModal(false)} className="absolute top-3 right-3">
-              <FiX size={20} />
+              <XIcon width={20} height={20} />
             </button>
             <div className="p-6 space-y-4">
               <div className="flex justify-center">
