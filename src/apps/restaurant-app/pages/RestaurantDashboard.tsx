@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Eye, Plus, TrendingUp, ShoppingBag } from 'lucide-react';
 import OrdersTable from './Orders/OrdersTable';
 import { Order } from '../types/Order';
@@ -7,21 +7,16 @@ import OrdersView from '../../restaurant-app/pages/Orders/OrderView';
 import MenuView from './Menu/MenuView';
 import ProfileSettings from '../components/ProfileSettings';
 import { Deal } from '../types/Deal';
-
-import { mockMenuItems } from '../../restaurant-app/components/RestaurantDashboard/data/MenuData';
 import { MenuItem } from '../types/Menu';
 import { Navigate, useNavigate } from 'react-router-dom';
-
-
-// Remove this local type and import the shared View type instead
-
+import axios from 'axios';
 
 interface RestaurantDashboardProps {
   currentView: string;
   orders: Order[];
   onViewOrder: (order: Order) => void;
   onViewChange: (view: string) => void;
-  onUpdateStatus?: (orderId: string, status: Order['status']) => void; // Add this line
+  onUpdateStatus?: (orderId: string, status: Order['status']) => void;
 }
 
 interface RestaurantProfile {
@@ -36,14 +31,14 @@ interface RestaurantProfile {
   isOpen: boolean;
 }
 
-export const RestaurantDashboard: React.FC<RestaurantDashboardProps> = ({ 
-  currentView, 
-  orders, 
+export const RestaurantDashboard: React.FC<RestaurantDashboardProps> = ({
+  currentView,
+  orders,
   onViewOrder,
   onViewChange,
-  onUpdateStatus 
+  onUpdateStatus
 }) => {
-  const [menuItems, setMenuItems] = useState(mockMenuItems);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [profile, setProfile] = useState<RestaurantProfile>({
     name: 'Your Restaurant Name',
@@ -57,50 +52,100 @@ export const RestaurantDashboard: React.FC<RestaurantDashboardProps> = ({
     isOpen: true
   });
   const [localOrders, setLocalOrders] = useState(orders);
+  const [loadingMenu, setLoadingMenu] = useState(false);
 
-  const handleAddMenuItem = (newItem: MenuItem) => {
-    setMenuItems(prevItems => [...prevItems, newItem]);
-  };
-
-  const handleEditMenuItem = (editedItem: MenuItem) => {
-    setMenuItems(prevItems =>
-      prevItems.map(item =>
-        item.id === editedItem.id ? editedItem : item
-      )
-    );
-  };
-
-  const handleToggleAvailability = (id: string) => {
-    setMenuItems(prevItems => 
-      prevItems.map(item => 
-        item.id === id 
-          ? { ...item, isAvailable: !item.isAvailable }
-          : item
-      )
-    );
-  };
-
-  const handleCreateDeal = (deal: Deal) => {
-  setDeals(prevDeals => [...prevDeals, deal]);
-};
-
-  const handleRemoveDeal = (dealId: string) => {
-    setDeals(prevDeals => prevDeals.filter(deal => deal.id !== dealId));
-  };
   const navigate = useNavigate();
+
+  // Replace with your actual restaurant ID logic
+  const restaurantId = localStorage.getItem('restaurantId');
+
+  // Fetch menu items from backend
+  useEffect(() => {
+    if (!restaurantId) return;
+    setLoadingMenu(true);
+    axios
+      .get(`http://localhost:3030/crameats/menus/:menuId`)
+      .then(res => {
+        // Assuming backend returns { menus: [{ items: [...] }] }
+        const menus = res.data.menus || [];
+        const allItems = menus.flatMap((menu: any) => menu.items || []);
+        setMenuItems(allItems);
+      })
+      .catch(() => setMenuItems([]))
+      .finally(() => setLoadingMenu(false));
+  }, [restaurantId]);
+
+  // Add menu item
+  const handleAddMenuItem = async (newItem: MenuItem) => {
+    if (!restaurantId) return;
+    try {
+      const res = await axios.post(
+        `http://localhost:3030/restaurants/${restaurantId}/items`,
+        newItem
+      );
+      setMenuItems(prev => [...prev, res.data]);
+    } catch (err) {
+      alert('Failed to add menu item');
+    }
+  };
+
+  // Edit menu item
+  const handleEditMenuItem = async (editedItem: MenuItem) => {
+    try {
+      await axios.put(
+        `http://localhost:3030/items/${editedItem.id}`,
+        editedItem
+      );
+      setMenuItems(prev =>
+        prev.map(item => (item.id === editedItem.id ? editedItem : item))
+      );
+    } catch (err) {
+      alert('Failed to update menu item');
+    }
+  };
+
+  // Toggle availability
+  const handleToggleAvailability = async (id: string) => {
+    const item = menuItems.find(i => i.id === id);
+    if (!item) return;
+    try {
+      await axios.put(`http://localhost:3030/items/${id}`, {
+        ...item,
+        isAvailable: !item.isAvailable
+      });
+      setMenuItems(prev =>
+        prev.map(i =>
+          i.id === id ? { ...i, isAvailable: !i.isAvailable } : i
+        )
+      );
+    } catch (err) {
+      alert('Failed to update availability');
+    }
+  };
+
+  // Delete menu item
+  const handleDeleteMenuItem = async (itemId: string) => {
+    try {
+      await axios.delete(`http://localhost:3030/items/${itemId}`);
+      setMenuItems(prev => prev.filter(item => item.id !== itemId));
+      setDeals(prevDeals =>
+        prevDeals.filter(
+          deal => !deal.bundleItems.some(bi => bi.menuItem.id === itemId)
+        )
+      );
+    } catch (err) {
+      alert('Failed to delete menu item');
+    }
+  };
+
+  // Deals logic (local only)
+  const handleCreateDeal = (deal: Deal) => setDeals(prev => [...prev, deal]);
+  const handleRemoveDeal = (dealId: string) =>
+    setDeals(prev => prev.filter(deal => deal.id !== dealId));
+
   const handleLogout = () => {
-    // Add your logout logic here
-    console.log('Logging out...');
-    // Example: redirect to login page
     navigate('/restaurantsignin');
   };
-  const handleDeleteMenuItem = (itemId: string) => {
-  setMenuItems(prevItems => prevItems.filter(item => item.id !== itemId));
-  // Also remove any deals that include this item
-  setDeals(prevDeals => prevDeals.filter(deal => 
-    !deal.bundleItems.some(bundleItem => bundleItem.menuItem.id === itemId)
-  ));
-};
 
   const handleUpdateOrderStatus = (orderId: string, newStatus: Order['status']) => {
     setLocalOrders(prevOrders =>
@@ -110,7 +155,6 @@ export const RestaurantDashboard: React.FC<RestaurantDashboardProps> = ({
           : order
       )
     );
-    // Also call the parent's update function if provided
     onUpdateStatus?.(orderId, newStatus);
   };
 
@@ -151,9 +195,9 @@ export const RestaurantDashboard: React.FC<RestaurantDashboardProps> = ({
   if (currentView === 'menu') {
     return (
       <div className="flex min-h-screen bg-gray-50">
-        <Sidebar 
-          currentView={currentView} 
-          onViewChange={onViewChange} 
+        <Sidebar
+          currentView={currentView}
+          onViewChange={onViewChange}
           onLogout={handleLogout}
         />
         <div className="flex-1 ml-64">
@@ -162,16 +206,11 @@ export const RestaurantDashboard: React.FC<RestaurantDashboardProps> = ({
               <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900">Menu Management</h1>
               </div>
-              <MenuView 
-                items={menuItems}
-                deals={deals}
-                onAddItem={handleAddMenuItem}
-                onEditItem={handleEditMenuItem}
-                onToggleAvailability={handleToggleAvailability}
-                onCreateDeal={handleCreateDeal}
-                onRemoveDeal={handleRemoveDeal}
-                onDeleteItem={handleDeleteMenuItem}
-              />
+              {loadingMenu ? (
+                <div>Loading menu...</div>
+              ) : (
+                <MenuView/>
+              )}
             </div>
           </div>
         </div>

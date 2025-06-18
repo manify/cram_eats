@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import RestaurantCard from '../components/ui/RestaurantCard';
 import { ShoppingCart } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { setLoading } from '../../../redux/store/features/orderSlice';
+import { setRestaurants } from '../../../redux/store/features/restaurantSlice';
+import { restaurants } from '../data/restaurants';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -12,49 +16,63 @@ const Home: React.FC = () => {
   const cartTotal = getCartTotal();
   const cartItemCount = items.reduce((count, item) => count + item.quantity, 0);
 
-  const featuredRestaurants = [
-    {
-      id: 'italian-place',
-      name: 'The Italian Place',
-      rating: 4.5,
-      reviewCount: 1200,
-      image: 'https://images.pexels.com/photos/1279330/pexels-photo-1279330.jpeg?auto=compress&cs=tinysrgb&w=400',
-      featured: true,
-    },
-    {
-      id: 'burger-haven',
-      name: 'Burger Haven',
-      rating: 4.6,
-      reviewCount: 1500,
-      image: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg?auto=compress&cs=tinysrgb&w=400',
-      featured: true,
-    },
-  ];
+  // const featuredRestaurants = [
+  //   {
+  //     id: 'italian-place',
+  //     name: 'The Italian Place',
+  //     rating: 4.5,
+  //     reviewCount: 1200,
+  //     image: 'https://images.pexels.com/photos/1279330/pexels-photo-1279330.jpeg?auto=compress&cs=tinysrgb&w=400',
+  //     featured: true,
+  //   },
+  //   {
+  //     id: 'burger-haven',
+  //     name: 'Burger Haven',
+  //     rating: 4.6,
+  //     reviewCount: 1500,
+  //     image: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg?auto=compress&cs=tinysrgb&w=400',
+  //     featured: true,
+  //   },
+  // ];
 
-  const popularRestaurants = [
-    ...featuredRestaurants,
-    {
-      id: 'taco-fiesta',
-      name: 'Taco Fiesta',
-      rating: 4.3,
-      reviewCount: 900,
-      image: 'https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&w=300',
-    },
-    {
-      id: 'noodle-nirvana',
-      name: 'Noodle Nirvana',
-      rating: 4.4,
-      reviewCount: 1100,
-      image: 'https://images.pexels.com/photos/884600/pexels-photo-884600.jpeg?auto=compress&cs=tinysrgb&w=300',
-    },
-    {
-      id: 'dessert-delight',
-      name: 'Dessert Delight',
-      rating: 4.7,
-      reviewCount: 1300,
-      image: 'https://images.pexels.com/photos/291528/pexels-photo-291528.jpeg?auto=compress&cs=tinysrgb&w=300',
-    },
-  ];
+  // const popularRestaurants = [
+  //   ...featuredRestaurants,
+  //   {
+  //     id: 'taco-fiesta',
+  //     name: 'Taco Fiesta',
+  //     rating: 4.3,
+  //     reviewCount: 900,
+  //     image: 'https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&w=300',
+  //   },
+  //   {
+  //     id: 'noodle-nirvana',
+  //     name: 'Noodle Nirvana',
+  //     rating: 4.4,
+  //     reviewCount: 1100,
+  //     image: 'https://images.pexels.com/photos/884600/pexels-photo-884600.jpeg?auto=compress&cs=tinysrgb&w=300',
+  //   },
+  //   {
+  //     id: 'dessert-delight',
+  //     name: 'Dessert Delight',
+  //     rating: 4.7,
+  //     reviewCount: 1300,
+  //     image: 'https://images.pexels.com/photos/291528/pexels-photo-291528.jpeg?auto=compress&cs=tinysrgb&w=300',
+  //   },
+  // ];
+  const [restaurants, setRestaurants] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+
+    useEffect(() => {
+    axios.get('http://localhost:3030/crameats/get/restaurants/')
+      .then(res => setRestaurants(res.data.restaurants)) // <-- FIXED HERE
+      .catch(() => setRestaurants([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div className="p-8 text-center">Loading restaurants...</div>;
+  }
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -74,8 +92,8 @@ const Home: React.FC = () => {
           <button className="text-primary-600 hover:text-primary-700 font-medium">View All</button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredRestaurants.map((restaurant, index) => (
-            <RestaurantCard key={index} {...restaurant} />
+          {restaurants.map((restaurant, index) => (
+            <RestaurantCard key={restaurant.id || index} {...restaurant} />
           ))}
         </div>
       </section>
@@ -87,7 +105,7 @@ const Home: React.FC = () => {
           <button className="text-primary-600 hover:text-primary-700 font-medium">View All</button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {popularRestaurants.map((restaurant, index) => (
+          {restaurants.map((restaurant, index) => (
             <RestaurantCard key={index} {...restaurant} />
           ))}
         </div>

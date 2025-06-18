@@ -118,20 +118,23 @@ function HeroSection() {
         </div>
 
         <div className="ml-5 w-[55%] max-md:ml-0 max-md:w-full">
-          <div className="w-full max-md:mt-10 max-md:max-w-full">
-            <div className="flex gap-5 max-md:flex-col">
-              <div className="w-[38%] max-md:ml-0 max-md:w-full">
-                <img
-                  src="https://cdn.builder.io/api/v1/image/assets/e212dd7ea28d4d5fb22c09ce9a305a74/e9ae7f6f3d4eb5c8b1753d5ec3d5f0b5837c8002?placeholderIfAbsent=true"
-                  alt="Food delivery illustration"
-                  className="object-contain z-10 self-stretch my-auto mr-0 w-full aspect-[1.02] max-md:mt-10"
-                />
-              </div>
-              <div className="ml-5 w-[62%] max-md:ml-0 max-md:w-full">
-                <FoodCategoryMenu />
-              </div>
-            </div>
-          </div>
+         <div className="container mx-auto px-4">
+  <div className="flex flex-col md:flex-row items-center justify-between">
+    {/* Image Container */}
+    <div className="relative w-full md:w-1/3 mb-8 md:mb-0">
+      <img
+        src="https://cdn.builder.io/api/v1/image/assets/e212dd7ea28d4d5fb22c09ce9a305a74/e9ae7f6f3d4eb5c8b1753d5ec3d5f0b5837c8002?placeholderIfAbsent=true"
+        alt="Food delivery illustration"
+        className="w-[200px] md:w-[250px] mx-auto object-contain"
+      />
+    </div>
+
+    {/* Food Category Menu Container */}
+    <div className="w-full md:w-2/3">
+      <FoodCategoryMenu />
+    </div>
+  </div>
+</div>
         </div>
       </div>
     </section>

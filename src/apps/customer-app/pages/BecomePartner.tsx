@@ -1,10 +1,13 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/ui/Layout';
-import { PartnerCard } from '../components/ui/PartnerCard';
+import {PartnerCard }from '../components/ui/PartnerCardRestaurant';
+import { PartnerCardDriver } from '../components/ui/PartnerCardDriver';
 
 export default function BecomePartner() {
    const navigate = useNavigate();
+   
+
   
   return (
     <Layout>
@@ -17,11 +20,12 @@ export default function BecomePartner() {
           description="Expand your customer base and streamline your catering operations with our platform."
           imageAlt="Restaurant partnership illustration"
         />
-        <PartnerCard
+        <PartnerCardDriver
           imageSrc="https://cdn.builder.io/api/v1/image/assets/cc5f9833dc2842af8ff61a3c0ac52f46/ec30994870cb8b84d29a3cc40ef392b94b1979c3?placeholderIfAbsent=true"
           title="Drivers"
           description="Enjoy flexible hours and competitive earnings by joining our delivery team."
           imageAlt="Driver partnership illustration"
+
         />
       </main>
     </Layout>

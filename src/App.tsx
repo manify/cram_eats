@@ -4,6 +4,8 @@ import ContactPage from './apps/customer-app/pages/ContactPage';
 import RestoPage from './apps/customer-app/pages/RestoPage';
 
 
+import { Provider } from 'react-redux';
+import { store } from '../src/redux/store/store';
 /* ─── Customer-side pages ─────────────────────────────── */
 import LandingPage from './apps/customer-app/pages/LandingPage';
 import SignIn from './apps/customer-app/pages/SignIn';
@@ -39,6 +41,10 @@ import { ColorFilterType } from './types/colorFilter';
 
 /* ─── Styles ──────────────────────────────────────────── */
 import './index.css';
+import { Tour } from '@mui/icons-material';
+import SignInDriver from './apps/driver-app/pages/driverSignIn';
+import DriverSignUp from './apps/driver-app/pages/driverSignUp';
+import DriverDashboard from './apps/driver-app/pages/driverDashboard';
 
 // Component to handle header visibility logic
 const AppContent: React.FC = () => {
@@ -61,7 +67,14 @@ const AppContent: React.FC = () => {
     );
   };
 
+  const onViewOrder = (order: Order) => {
+    // You can implement navigation or modal logic here if needed
+    // For now, just a placeholder
+    console.log('View order:', order);
+  };
+
   return (
+    <Provider store={store}>
     <>
       {/* Conditional Header */}
       {shouldShowHeader && (
@@ -103,26 +116,29 @@ const AppContent: React.FC = () => {
 
         {/* ─── Restaurant Dashboard (Protected Route) ─── */}
         <Route
-          path="/restaurantdashboard"
-          element={
-            restaurantAuth.isAuthenticated() ? (
-              <RestaurantDashboard
-                currentView={currentView}
-                orders={orders}
-                onViewOrder={() => {}}
-                onViewChange={handleViewChange}
-                onUpdateStatus={handleUpdateOrderStatus}
-              />
-            ) : (
-              <Navigate to="/restaurantsignin" replace />
-            )
-          }
-        />
+  path="/restaurantdashboard"
+  element={
+    <RestaurantDashboard
+      currentView={currentView}
+      orders={orders}
+      onViewOrder={onViewOrder}
+      onViewChange={handleViewChange}
+      onUpdateStatus={handleUpdateOrderStatus}
+    />
+  }
+/>
 
         {/* ─── Catch-all Redirect ─── */}
         <Route path="*" element={<Navigate to="/" replace />} />
+         {/* ─── Driver Auth ─── */}
+         <Route path="/driver-signin" element={<SignInDriver />} />
+        <Route path="/driver-signup" element={<DriverSignUp />} />
+        
+        {/* ─── Driver Dashboard (Protected Route) ─── */}
+        <Route path="/driver/dashboard" element={<DriverDashboard />} />
       </Routes>
     </>
+    </Provider>
   );
 };
 
@@ -140,6 +156,7 @@ function App() {
         </CartProvider>
       </NotificationProvider>
     </div>
+    
   );
 }
 

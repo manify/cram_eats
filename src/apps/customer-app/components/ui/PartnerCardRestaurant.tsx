@@ -18,8 +18,11 @@ export const PartnerCard: React.FC<PartnerCardProps> = ({
   onClick
 }) => {
   const navigate = useNavigate();
-  const handlePartnerCardClick = () => {
+  const handlePartnerCardClickRestaurant = () => {
     navigate('/restaurantsignin');
+  };
+  const handlePartnerCardClickDriver = () => {
+    navigate('/driver-signin');
   };
   return (
     <article className="grow shrink min-w-60 w-[530px] max-md:max-w-full p-6">
@@ -27,7 +30,7 @@ export const PartnerCard: React.FC<PartnerCardProps> = ({
         src={imageSrc}
         alt={imageAlt || title}
         className="w-full rounded-2xl aspect-video object-cover hover:scale-105 transition-transform duration-300"
-        onClick={handlePartnerCardClick}
+        onClick={handlePartnerCardClickRestaurant} // Default click handler for restaurant card
       />
       <div className="mt-6 space-y-4">
         <h2 className="text-xl font-semibold text-neutral-900">

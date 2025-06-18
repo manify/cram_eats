@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import signup, { RestaurantSignupData } from '../api/signup';
+import axios from 'axios';
 import Layout from '../../customer-app/components/ui/Layout';
 
 export const SignUpRestaurant: React.FC = () => {
@@ -46,7 +46,7 @@ export const SignUpRestaurant: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-      
+
     // Validate required fields
     const requiredFields = {
       email: formData.email,
@@ -80,50 +80,20 @@ export const SignUpRestaurant: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-        
-      // Remove confirmPassword and create the API data object
       const { confirmPassword, ...signupData } = formData;
 
-      await signup(signupData);
+      // Use your backend API to create the restaurant
+      await axios.post('http://localhost:3001/auth/create-restaurant-account', signupData, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      // Optionally, set authentication here if your backend returns a token
+      // localStorage.setItem('restaurantUser', JSON.stringify(response.data));
+      // localStorage.setItem('restaurantToken', response.data.token);
+
       navigate('/restaurantdashboard');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Signup failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Add this function to test the API with sample data
-  const testAPI = async () => {
-    try {
-      setLoading(true);
-      setError('');
-
-      const testData: RestaurantSignupData = {
-        email: "john.doe@exdsdsample.com",
-        password: "SecurePass123!",
-        firstName: "Jo",
-        lastName: "Do",
-        role: 'restaurantOwner',
-        restaurantName: "Gourmet Delight",
-        restaurantAddress: "123 Food Street, New York, NY",
-        restaurantLat: 40.7128,
-        restaurantLong: -74.0060,
-        openingHours: "08:00",
-        closingHours: "22:00",
-        workingDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-        phoneNumber: "123-456-7890",
-        cuisineType: "International",
-        businessLicense: ""
-      };
-
-      console.log('Data being sent to API:', JSON.stringify(testData, null, 2));
-      const response = await signup(testData);
-      console.log('API Response:', response);
-      navigate('/restaurantdashboard');
-    } catch (err) {
-      console.error('Full error object:', err);
-      setError(err instanceof Error ? err.message : 'Signup failed');
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err.message || 'Signup failed');
     } finally {
       setLoading(false);
     }
@@ -133,7 +103,6 @@ export const SignUpRestaurant: React.FC = () => {
     <Layout>
       <main className="flex justify-center items-center p-5 min-h-screen bg-[#FFF6E5]">
         <div className="bg-white rounded-2xl shadow-lg w-full max-w-4xl pl-8 pr-8 pb-4 space-y-6">
-          
           {/* Header */}
           <header className="flex justify-center items-center bg-green-400 rounded-t-lg h-[103px] max-sm:h-20 mr-[-2rem] ml-[-2rem]">
             <div className="flex flex-col gap-2 items-center max-sm:gap-1">
@@ -247,68 +216,55 @@ export const SignUpRestaurant: React.FC = () => {
 
             {/* Business Information */}
             <div>
-  <label className="block text-sm font-medium text-gray-700">Opening Hours</label>
-  <input
-    name="openingHours"
-    type="time"
-    value={formData.openingHours}
-    onChange={handleChange}
-    className="w-full border border-gray-300 rounded-md px-3 py-2"
-    required
-  />
-</div>
-
-<div>
-  <label className="block text-sm font-medium text-gray-700">Closing Hours</label>
-  <input
-    name="closingHours"
-    type="time"
-    value={formData.closingHours}
-    onChange={handleChange}
-    className="w-full border border-gray-300 rounded-md px-3 py-2"
-    required
-  />
-</div>
-
-<div>
-  <label className="block text-sm font-medium text-gray-700">Working Days</label>
-  <div className="grid grid-cols-2 gap-2">
-    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-      <label key={day} className="flex items-center space-x-2">
-        <input
-          type="checkbox"
-          checked={formData.workingDays.includes(day)}
-          onChange={() => handleWorkingDaysChange(day)}
-          className="rounded border-gray-300"
-        />
-        <span className="text-sm">{day}</span>
-      </label>
-    ))}
-  </div>
-</div>
-
-<div>
-  <label className="block text-sm font-medium text-gray-700">Business License</label>
-  <input
-    name="businessLicense"
-    value={formData.businessLicense}
-    onChange={handleChange}
-    className="w-full border border-gray-300 rounded-md px-3 py-2"
-    placeholder="Optional"
-  />
-</div>
-
-<div>
-  <label className="block text-sm font-medium text-gray-700">Restaurant Name</label>
-  <input
-    name="restaurantName"
-    value={formData.restaurantName}
-    onChange={handleChange}
-    className="w-full border border-gray-300 rounded-md px-3 py-2"
-    required
-  />
-</div>
-
+              <label className="block text-sm font-medium text-gray-700">Opening Hours</label>
+              <input
+                name="openingHours"
+                type="time"
+                value={formData.openingHours}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                required
+              />
+              <label className="block text-sm font-medium text-gray-700 mt-4">Closing Hours</label>
+              <input
+                name="closingHours"
+                type="time"
+                value={formData.closingHours}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                required
+              />
+              <label className="block text-sm font-medium text-gray-700 mt-4">Working Days</label>
+              <div className="grid grid-cols-2 gap-2">
+                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+                  <label key={day} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.workingDays.includes(day)}
+                      onChange={() => handleWorkingDaysChange(day)}
+                      className="rounded border-gray-300"
+                    />
+                    <span className="text-sm">{day}</span>
+                  </label>
+                ))}
+              </div>
+              <label className="block text-sm font-medium text-gray-700 mt-4">Business License</label>
+              <input
+                name="businessLicense"
+                value={formData.businessLicense}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                placeholder="Optional"
+              />
+              <label className="block text-sm font-medium text-gray-700 mt-4">Restaurant Name</label>
+              <input
+                name="restaurantName"
+                value={formData.restaurantName}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                required
+              />
+            </div>
 
             {/* Terms and Submit */}
             <div className="col-span-full space-y-4">
@@ -324,38 +280,17 @@ export const SignUpRestaurant: React.FC = () => {
                 </label>
               </div>
               <button 
-  type="button" 
-  onClick={testAPI}
-  className="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 transition mb-4"
-  disabled={loading}
->
-  {loading ? 'Testing API...' : 'Test API with Sample Data'}
-</button>
-
-              <button 
                 type="submit" 
                 className="w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-600 transition"
                 disabled={loading}
               >
                 {loading ? 'Creating Account...' : 'Create Account'}
               </button>
-
               <p className="text-center text-sm text-gray-600">
                 Already have an account? <a href="/restaurantsignin" className="text-green-600 font-medium">Sign in</a>
               </p>
             </div>
           </form>
-
-          {/* Add this button somewhere in your form for testing */}
-          <div className="col-span-full">
-            <button 
-              onClick={testAPI} 
-              className="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 transition"
-              disabled={loading}
-            >
-              {loading ? 'Testing API...' : 'Test API with Sample Data'}
-            </button>
-          </div>
         </div>
       </main>
     </Layout>
