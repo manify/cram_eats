@@ -9,7 +9,7 @@ import { getRestaurantById, getMenuCategories } from '../data/restaurants';
 import { useCart } from '../contexts/CartContext';
 import { useNotifications } from '../contexts/NotificationContext';
 
-const RestaurantPage: React.FC = () => {
+const RestaurantDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart, getCartItemCount } = useCart();
@@ -18,10 +18,12 @@ const RestaurantPage: React.FC = () => {
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
 
   const restaurant = id ? getRestaurantById(id) : undefined;
-  const categories = restaurant ? getMenuCategories(restaurant.id) : [];
+  const categories = id ? getMenuCategories(id) : [];
 
   useEffect(() => {
-    if (!restaurant) navigate('/dashboard/home');
+    if (!restaurant) {
+      navigate('/dashboard/home');
+    }
   }, [restaurant, navigate]);
 
   if (!restaurant) {
@@ -34,7 +36,7 @@ const RestaurantPage: React.FC = () => {
 
   const filteredMenu = selectedCategory === 'All'
     ? restaurant.menu
-    : restaurant.menu.filter(item => item.category === selectedCategory);
+    : restaurant.menu.filter((item) => item.category === selectedCategory);
 
   const handleAddToCart = (item: any) => {
     const quantity = quantities[item.id] || 1;
@@ -73,22 +75,24 @@ const RestaurantPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Header with Image and Overlay */}
       <div className="relative">
         <img src={restaurant.coverImage} alt={restaurant.name} className="w-full h-64 md:h-80 object-cover" />
         <div className="absolute inset-0 bg-black bg-opacity-40" />
 
+        {/* Back Button */}
         <button
           onClick={() => navigate('/dashboard/home')}
-          className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition"
+          className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors duration-200"
         >
           <ArrowLeft className="w-6 h-6 text-gray-900" />
         </button>
 
+        {/* Cart Button */}
         {cartItemCount > 0 && (
           <button
             onClick={() => navigate('/cart')}
-            className="fixed bottom-6 right-6 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg z-50 transition-transform hover:scale-105"
+            className="fixed bottom-6 right-6 bg-green-600 hover:bg-green-700 text-white p-4 rounded-full shadow-lg z-50 transition-all duration-200 transform hover:scale-105"
           >
             <div className="flex items-center space-x-2">
               <ShoppingCart className="w-6 h-6" />
@@ -99,6 +103,7 @@ const RestaurantPage: React.FC = () => {
           </button>
         )}
 
+        {/* Text Info */}
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">{restaurant.name}</h1>
           <p className="text-lg text-gray-200 mb-4">{restaurant.description}</p>
@@ -120,7 +125,7 @@ const RestaurantPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Info Section */}
+      {/* Details Section */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -137,10 +142,10 @@ const RestaurantPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Category Filters */}
+      {/* Categories */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex space-x-2 overflow-x-auto">
-          {['All', ...categories.filter(c => c !== 'All')].map(category => (
+          {categories.map((category: string) => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
@@ -159,8 +164,8 @@ const RestaurantPage: React.FC = () => {
       {/* Menu Items */}
       <div className="max-w-4xl mx-auto p-6">
         <div className="grid gap-6">
-          {filteredMenu.map(item => (
-            <div key={item.id} className="bg-white p-6 rounded-xl shadow hover:shadow-md transition">
+          {filteredMenu.map((item: any) => (
+            <div key={item.id} className="card p-6 hover:shadow-lg transition-shadow duration-200">
               <div className="flex flex-col md:flex-row gap-4">
                 <img
                   src={item.image}
@@ -173,7 +178,9 @@ const RestaurantPage: React.FC = () => {
                       <div className="flex items-center space-x-2 mb-1">
                         <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
                         {item.popular && (
-                          <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full font-medium">Popular</span>
+                          <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full font-medium">
+                            Popular
+                          </span>
                         )}
                         {item.spicy && <Flame className="w-4 h-4 text-red-500" />}
                         {item.vegetarian && <Leaf className="w-4 h-4 text-green-500" />}
@@ -204,7 +211,7 @@ const RestaurantPage: React.FC = () => {
 
                     <button
                       onClick={() => handleAddToCart(item)}
-                      className="bg-green-500 hover:bg-green-600 text-white font-medium px-6 py-2 rounded-lg flex items-center space-x-2"
+                      className="btn-primary bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg flex items-center space-x-2"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Add to Cart</span>
@@ -220,4 +227,4 @@ const RestaurantPage: React.FC = () => {
   );
 };
 
-export default RestaurantPage;
+export default RestaurantDetail;

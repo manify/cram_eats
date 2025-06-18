@@ -1,70 +1,104 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { Package, Clock, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from '../contexts/CartContext';
+import OrderCard from '../components/ui/OrderCard';
 
-export default function Orders() {
-  const [orders, setOrders] = useState<any[]>([]);
+/**
+ * Orders dashboard – shows quick stats + list of current / past orders
+ * (uses CartContext → orders[])
+ */
+const Orders: React.FC = () => {
+  const { orders } = useCart();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const stored = localStorage.getItem("userBasket");
-    if (stored) setOrders(JSON.parse(stored));
-  }, []);
+  /* ─ helpers ─────────────────────────────────────────── */
+  const stats = React.useMemo(() => {
+    const total     = orders.length;
+    const delivered = orders.filter(o => o.status === 'delivered').length;
+    const active    = total - delivered;                         // every non-delivered order
+    return { total, active, delivered };
+  }, [orders]);
 
-  const storedName = localStorage.getItem("userName") || localStorage.getItem("userEmail")?.split("@")[0] || "Guest";
-  const userInitial = storedName.charAt(0).toUpperCase();
-  const location = localStorage.getItem("userLocation") || "25 Avenue des Mazades";
+  const fmtTime = (d?: Date) =>
+    d?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) ?? undefined;
 
+  /* ─ render ───────────────────────────────────────────── */
   return (
-    <div className="min-h-screen bg-white text-neutral-800">
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className="w-64 bg-yellow-50 p-6 space-y-6 hidden md:block">
-          <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center text-white font-semibold text-lg">
-              {userInitial}
-            </div>
-            <div>
-              <h2 className="font-medium text-base">{storedName}</h2>
-              <p className="text-sm text-green-400 cursor-pointer" onClick={() => navigate('/dashboard')}>Back to Home</p>
-            </div>
+    <div className="space-y-8 animate-fade-in">
+      {/* banner */}
+      <header className="rounded-2xl p-6 text-white bg-gradient-to-r from-blue-500 to-blue-600 shadow">
+        <h1 className="text-3xl font-extrabold mb-1">Your Orders</h1>
+        <p className="opacity-90">Track your current and past orders</p>
+      </header>
+
+      {/* stat tiles */}
+      <section className="grid gap-6 sm:grid-cols-3">
+        <StatTile
+          icon={<Package className="w-6 h-6 text-blue-600" />}
+          label="Total Orders"
+          value={stats.total}
+          bg="bg-blue-100"
+        />
+        <StatTile
+          icon={<Clock className="w-6 h-6 text-orange-600" />}
+          label="Active Orders"
+          value={stats.active}
+          bg="bg-orange-100"
+        />
+        <StatTile
+          icon={<CheckCircle className="w-6 h-6 text-green-600" />}
+          label="Delivered"
+          value={stats.delivered}
+          bg="bg-green-100"
+        />
+      </section>
+
+      {/* list */}
+      <section>
+        <h2 className="text-2xl font-semibold mb-4">Your Orders</h2>
+
+        {orders.length === 0 ? (
+          <div className="py-20 text-center text-gray-500">
+            You haven’t placed any orders yet.
           </div>
-
-          <nav className="mt-6 space-y-4 text-sm font-medium">
-            <a onClick={() => navigate('/dashboard')} className="flex items-center text-neutral-900 px-3 py-2 cursor-pointer">Home</a>
-            <a className="flex items-center text-white bg-green-400 px-3 py-2 rounded-3xl cursor-pointer">Orders</a>
-            <a className="flex items-center text-neutral-900 px-3 py-2">Notifications</a>
-            <a className="flex items-center text-neutral-900 px-3 py-2">Account</a>
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 p-8 space-y-6">
-          <header className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="flex w-full md:w-1/2 items-center bg-yellow-50 px-4 py-2 rounded-xl border border-gray-200">
-              <span className="text-green-400">Orders for {location}</span>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-gray-100 border"></div>
-          </header>
-
-          <section>
-            <h2 className="text-xl font-semibold mb-4">Current Orders</h2>
-            {orders.length === 0 ? (
-              <p className="text-gray-500">No items in your basket.</p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {orders.map((item, index) => (
-                  <div key={index} className="bg-white rounded-xl shadow-md overflow-hidden p-4 border border-gray-100">
-                    <h3 className="text-lg font-semibold">{item.name}</h3>
-                    <p className="text-sm text-gray-600">{item.description}</p>
-                    <p className="text-green-600 font-bold mt-1">{item.price.toFixed(2)} €</p>
-                    <p className="text-sm text-emerald-700 mt-1">Status: <span className="font-medium">Pending</span></p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        </main>
-      </div>
+        ) : (
+          <div className="space-y-6">
+            {orders.map(o => (
+              <OrderCard
+                key={o.id}
+                id={o.id}
+                items={o.items}
+                restaurant={o.restaurant}
+                status={o.status}
+                orderTime={fmtTime(o.orderTime)!}
+                estimatedDelivery={fmtTime(o.estimatedDelivery)}
+                total={o.total}
+                onTrackOrder={() => navigate(`/order-tracking/${o.id}`)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
+};
+
+/* ――― small tile component ――― */
+interface TileProps {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  bg: string; // tailwind colour (e.g. bg-blue-100)
 }
+const StatTile: React.FC<TileProps> = ({ icon, label, value, bg }) => (
+  <div className="flex items-center gap-3 p-6 bg-white rounded-xl shadow">
+    <div className={`p-3 rounded-lg ${bg}`}>{icon}</div>
+    <div>
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="text-2xl font-extrabold text-gray-900">{value}</p>
+    </div>
+  </div>
+);
+
+export default Orders;
