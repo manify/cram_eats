@@ -1,0 +1,1 @@
+export type ColorFilterType = 'none' | 'deuteranopia' | 'protanopia' | 'tritanopia';

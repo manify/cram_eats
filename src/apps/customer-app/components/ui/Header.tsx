@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'react-feather';
+import { ColorFilterType } from '../../../../types/colorFilter';
 
-export default function Header() {
+interface HeaderProps {
+  colorFilter: 'none' | 'deuteranopia' | 'protanopia' | 'tritanopia';
+  setColorFilter: Dispatch<SetStateAction<ColorFilterType>>;
+}
+
+export default function Header({ colorFilter, setColorFilter }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -68,6 +74,20 @@ export default function Header() {
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
+          <div className="hidden md:flex items-center gap-3">
+            <label htmlFor="cb-mode" className="text-sm text-neutral-700">Colorblind Mode:</label>
+            <select
+              id="cb-mode"
+              value={colorFilter}
+              onChange={(e) => setColorFilter(e.target.value as typeof colorFilter)}
+              className="text-sm border rounded px-2 py-1"
+            >
+              <option value="none">Normal</option>
+              <option value="deuteranopia">Deuteranopia</option>
+              <option value="protanopia">Protanopia</option>
+              <option value="tritanopia">Tritanopia</option>
+            </select>
+          </div>
         </div>
 
         {/* Mobile Menu */}
