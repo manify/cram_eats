@@ -1,15 +1,15 @@
 import React from 'react';
 import { Package, Clock, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useCart } from '../contexts/CartContext';
+import { useCartStore } from '../stores';
 import OrderCard from '../components/ui/OrderCard';
 
 /**
  * Orders dashboard – shows quick stats + list of current / past orders
- * (uses CartContext → orders[])
+ * (uses CartStore → orders[])
  */
 const Orders: React.FC = () => {
-  const { orders } = useCart();
+  const { orders } = useCartStore();
   const navigate = useNavigate();
 
   /* ─ helpers ─────────────────────────────────────────── */

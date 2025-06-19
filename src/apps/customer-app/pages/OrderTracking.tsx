@@ -4,12 +4,12 @@ import {
   ArrowLeft, CheckCircle, Clock, Truck, Package,
   MapPin, Phone
 } from 'lucide-react';
-import { useCart } from '../contexts/CartContext';
+import { useCartStore } from '../stores';
 
 const OrderTracking: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate   = useNavigate();
-  const { getOrderById } = useCart();
+  const { getOrderById } = useCartStore();
 
   const order = orderId ? getOrderById(orderId) : undefined;
 

@@ -29,10 +29,6 @@ import { RestaurantDashboard } from './apps/restaurant-app/pages/RestaurantDashb
 /* ─── Components ──────────────────────────────────────── */
 import Header from './apps/customer-app/components/ui/Header';
 
-/* ─── Global providers ────────────────────────────────── */
-import { NotificationProvider } from './apps/customer-app/contexts/NotificationContext';
-import { CartProvider } from './apps/customer-app/contexts/CartContext';
-
 /* ─── Types and Data ──────────────────────────────────── */
 import { Order } from './apps/restaurant-app/types/Order';
 import { mockOrders } from './apps/restaurant-app/components/RestaurantDashboard/data/MockData';
@@ -148,13 +144,9 @@ function App() {
 
   return (
     <div style={{ filter: colorFilter !== 'none' ? `url(#${colorFilter})` : 'none' }}>
-      <NotificationProvider>
-        <CartProvider>
-          <Router>
-            <AppContent />
-          </Router>
-        </CartProvider>
-      </NotificationProvider>
+      <Router>
+        <AppContent />
+      </Router>
     </div>
     
   );

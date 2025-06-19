@@ -5,36 +5,71 @@ import {
   Plus, Minus, ShoppingCart, Flame, Leaf
 } from 'lucide-react';
 
-import { getRestaurantById, getMenuCategories } from '../data/restaurants';
-import { useCart } from '../contexts/CartContext';
-import { useNotifications } from '../contexts/NotificationContext';
+import { useCartStore, useRestaurantStore, useNotificationStore } from '../stores';
 
 const RestaurantPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addToCart, getCartItemCount } = useCart();
-  const { addNotification } = useNotifications();
+  const { addToCart, getCartItemCount } = useCartStore();
+  const { addNotification } = useNotificationStore();
+  const { selectedRestaurant, isLoadingDetail, error, fetchRestaurantById } = useRestaurantStore();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
-
-  const restaurant = id ? getRestaurantById(id) : undefined;
-  const categories = restaurant ? getMenuCategories(restaurant.id) : [];
-
   useEffect(() => {
-    if (!restaurant) navigate('/dashboard/home');
-  }, [restaurant, navigate]);
+    if (id && !isLoadingDetail) {
+      const restaurantId = parseInt(id);
+      // Only fetch if we don't have the selected restaurant or it's a different one
+      if (!selectedRestaurant || selectedRestaurant.id !== restaurantId) {
+        console.log(`Loading restaurant details for ID: ${restaurantId}`);
+        fetchRestaurantById(restaurantId);
+      }
+    }
+  }, [id]); // Remove fetchRestaurantById from dependencies
 
-  if (!restaurant) {
+  if (isLoadingDetail) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600 text-lg">Loading restaurant details...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
+  if (error || !selectedRestaurant) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 text-lg mb-4">{error || 'Restaurant not found'}</p>
+          <div className="space-x-4">
+            {id && (
+              <button 
+                onClick={() => fetchRestaurantById(parseInt(id))}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg"
+                disabled={isLoadingDetail}
+              >
+                {isLoadingDetail ? 'Loading...' : 'Retry'}
+              </button>
+            )}
+            <button 
+              onClick={() => navigate('/dashboard/home')}
+              className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg"
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
-  const filteredMenu = selectedCategory === 'All'
-    ? restaurant.menu
-    : restaurant.menu.filter(item => item.category === selectedCategory);
+  // Get unique categories from menu
+  const categories = selectedRestaurant.menu.map(menu => menu.name);
+  const allCategories = ['All', ...categories];
+
+  // Filter menu items based on selected category
+  const filteredMenuItems = selectedCategory === 'All' 
+    ? selectedRestaurant.menu.flatMap(menu => menu.items.map(item => ({ ...item.item, menuName: menu.name })))
+    : selectedRestaurant.menu
+        .filter(menu => menu.name === selectedCategory)
+        .flatMap(menu => menu.items.map(item => ({ ...item.item, menuName: menu.name })));
 
   const handleAddToCart = (item: any) => {
     const quantity = quantities[item.id] || 1;
@@ -43,12 +78,12 @@ const RestaurantPage: React.FC = () => {
       addToCart({
         id: `${item.id}-${Date.now()}-${i}`,
         name: item.name,
-        description: item.description,
+        description: item.itemId, // Using itemId as description since API doesn't provide description
         price: item.price,
-        restaurantId: restaurant.id,
-        restaurantName: restaurant.name,
-        image: item.image,
-        category: item.category
+        restaurantId: selectedRestaurant.id.toString(),
+        restaurantName: selectedRestaurant.name,
+        image: item.imageUrl,
+        category: item.menuName
       });
     }
 
@@ -71,11 +106,14 @@ const RestaurantPage: React.FC = () => {
 
   const cartItemCount = getCartItemCount();
 
+  // Default cover image since API doesn't provide one
+  const coverImage = 'https://images.pexels.com/photos/1279330/pexels-photo-1279330.jpeg?auto=compress&cs=tinysrgb&w=800';
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="relative">
-        <img src={restaurant.coverImage} alt={restaurant.name} className="w-full h-64 md:h-80 object-cover" />
+        <img src={coverImage} alt={selectedRestaurant.name} className="w-full h-64 md:h-80 object-cover" />
         <div className="absolute inset-0 bg-black bg-opacity-40" />
 
         <button
@@ -100,21 +138,21 @@ const RestaurantPage: React.FC = () => {
         )}
 
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">{restaurant.name}</h1>
-          <p className="text-lg text-gray-200 mb-4">{restaurant.description}</p>
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">{selectedRestaurant.name}</h1>
+          <p className="text-lg text-gray-200 mb-4">Owned by {selectedRestaurant.user.firstName} {selectedRestaurant.user.lastName}</p>
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <div className="flex items-center space-x-1">
               <Star className="w-4 h-4 text-yellow-400 fill-current" />
-              <span>{restaurant.rating}</span>
-              <span>({restaurant.reviewCount}+ reviews)</span>
+              <span>4.5</span>
+              <span>(100+ reviews)</span>
             </div>
             <div className="flex items-center space-x-1">
               <Clock className="w-4 h-4" />
-              <span>{restaurant.deliveryTime}</span>
+              <span>25-35 min</span>
             </div>
             <div className="flex items-center space-x-1">
               <MapPin className="w-4 h-4" />
-              <span>{restaurant.distance}</span>
+              <span>1.2 km</span>
             </div>
           </div>
         </div>
@@ -124,10 +162,10 @@ const RestaurantPage: React.FC = () => {
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <p className="text-gray-600 mb-1">{restaurant.cuisine} • {restaurant.address}</p>
+            <p className="text-gray-600 mb-1">Restaurant • {selectedRestaurant.location || 'Location not specified'}</p>
             <div className="flex items-center space-x-1 text-gray-600">
               <Phone className="w-4 h-4" />
-              <span>{restaurant.phone}</span>
+              <span>{selectedRestaurant.user.email}</span>
             </div>
           </div>
           <div className="flex items-center space-x-4">
@@ -140,7 +178,7 @@ const RestaurantPage: React.FC = () => {
       {/* Category Filters */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex space-x-2 overflow-x-auto">
-          {['All', ...categories.filter(c => c !== 'All')].map(category => (
+          {allCategories.map(category => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
@@ -154,67 +192,74 @@ const RestaurantPage: React.FC = () => {
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Menu Items */}
+      </div>      {/* Menu Items */}
       <div className="max-w-4xl mx-auto p-6">
-        <div className="grid gap-6">
-          {filteredMenu.map(item => (
-            <div key={item.id} className="bg-white p-6 rounded-xl shadow hover:shadow-md transition">
-              <div className="flex flex-col md:flex-row gap-4">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-full md:w-32 h-32 object-cover rounded-lg"
-                />
-                <div className="flex-1">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
-                        {item.popular && (
-                          <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full font-medium">Popular</span>
-                        )}
-                        {item.spicy && <Flame className="w-4 h-4 text-red-500" />}
-                        {item.vegetarian && <Leaf className="w-4 h-4 text-green-500" />}
+        {filteredMenuItems.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-600 text-lg">No items available in this category</p>
+          </div>
+        ) : (
+          <div className="grid gap-6">
+            {filteredMenuItems.map(item => (
+              <div key={item.id} className="bg-white p-6 rounded-xl shadow hover:shadow-md transition">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <img
+                    src={item.imageUrl || 'https://images.pexels.com/photos/1279330/pexels-photo-1279330.jpeg?auto=compress&cs=tinysrgb&w=300'}
+                    alt={item.name}
+                    className="w-full md:w-32 h-32 object-cover rounded-lg"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
+                          {item.status === 'available' && (
+                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">Available</span>
+                          )}
+                          {item.status === 'unavailable' && (
+                            <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-medium">Unavailable</span>
+                          )}
+                        </div>
+                        <p className="text-gray-600 mb-3">Item ID: {item.itemId}</p>
+                        <p className="text-xl font-bold text-green-600">€{item.price.toFixed(2)}</p>
                       </div>
-                      <p className="text-gray-600 mb-3">{item.description}</p>
-                      <p className="text-xl font-bold text-green-600">€{item.price.toFixed(2)}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="flex items-center space-x-3">
-                      <button
-                        onClick={() => updateQuantity(item.id, -1)}
-                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
-                      >
-                        <Minus className="w-4 h-4" />
-                      </button>
-                      <span className="font-medium text-lg min-w-[2rem] text-center">
-                        {quantities[item.id] || 1}
-                      </span>
-                      <button
-                        onClick={() => updateQuantity(item.id, 1)}
-                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
                     </div>
 
-                    <button
-                      onClick={() => handleAddToCart(item)}
-                      className="bg-green-500 hover:bg-green-600 text-white font-medium px-6 py-2 rounded-lg flex items-center space-x-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Add to Cart</span>
-                    </button>
+                    {item.status === 'available' && (
+                      <div className="flex items-center justify-between mt-4">
+                        <div className="flex items-center space-x-3">
+                          <button
+                            onClick={() => updateQuantity(item.id.toString(), -1)}
+                            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                          <span className="font-medium text-lg min-w-[2rem] text-center">
+                            {quantities[item.id] || 1}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(item.id.toString(), 1)}
+                            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => handleAddToCart(item)}
+                          className="bg-green-500 hover:bg-green-600 text-white font-medium px-6 py-2 rounded-lg flex items-center space-x-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>Add to Cart</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

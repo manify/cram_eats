@@ -1,9 +1,9 @@
 import React from 'react';
-import { useNotifications } from '../contexts/NotificationContext';
+import { useNotificationStore } from '../stores';
 import { Bell, Package, Gift, Settings, Trash2, BookMarked as MarkAsRead } from 'lucide-react';
 
 const Notifications: React.FC = () => {
-  const { notifications, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const { notifications, markAsRead, markAllAsRead, deleteNotification } = useNotificationStore();
 
   const getNotificationIcon = (type: string) => {
     switch (type) {

@@ -30,32 +30,20 @@ export default function SignUp() {
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
-  if (e) e.preventDefault();
-
-  if (password !== confirmPassword) {
-    alert("Passwords don't match");
-    return;
-  }
-
-  try {
-    await signUp(email, password);
-   const userInfo = {
-  name: `${firstName} ${lastName}`,
-  email: email
-};
-localStorage.setItem("user", JSON.stringify(userInfo));
-
-
-    //  Store credentials temporarily for pre-filling SignIn
-    localStorage.setItem("tempEmail", email);
-    localStorage.setItem("tempPassword", password);
-
-    navigate('/signin'); // ✅ Redirect to SignIn after SignUp
-  } catch (error) {
-    alert('Error creating account');
-  }
-};
-
+    if (e) e.preventDefault();
+    if (password !== confirmPassword) {
+      alert("Passwords don't match");
+      return;
+    }
+    try {
+      await signUp(firstName, lastName, email, password, "client");
+      const name = email.split('@')[0];
+      localStorage.setItem("userName", name);
+      navigate('/dashboard/home');
+    } catch (error) {
+      alert('Error creating account');
+    }
+  };
 
   return (
     <Layout>

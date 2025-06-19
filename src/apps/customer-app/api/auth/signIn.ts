@@ -1,4 +1,9 @@
+import apiClient from '../client';
+
 export default async function signIn(email: string, password: string) {
-  // Replace with real API call
-  return Promise.resolve();
-}   
+  const response = await apiClient.post('/auth/login-account', {
+    email,
+    password
+  });
+  return response.data;
+}

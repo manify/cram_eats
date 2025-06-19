@@ -8,8 +8,9 @@ import { RememberMeSection } from "../components/ui/RememberMeSection";
 import { SignInButton } from "../components/ui/SignInButton";
 import { SignUpLink } from "../components/ui/SignUpLink";
 
-import signIn from "../api/auth/signIn";
+import { useAuthStore } from "../stores";
 import Layout from "../components/ui/Layout";
+import { testServerConnection } from "../api/testConnection";
 
 // Header of the sign-in page
 function LoginHeader() {
@@ -26,6 +27,7 @@ export default function SignIn() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
+  const { login, isLoading, error, clearError } = useAuthStore();
 
   const handleSignUpClick = () => {
     navigate('/signup');
@@ -33,16 +35,11 @@ export default function SignIn() {
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    
+    console.log('Attempting to sign in with:', { email, password: '***' });
+    
     try {
-      // Simulate sign-in API call
-      await signIn(email, password);
-
-      // Save user info locally (can be used in Account.tsx)
-      const userInfo = {
-        name: email.split('@')[0], // Use the part before @ as name
-        email: email,
-      };
-      localStorage.setItem("user", JSON.stringify(userInfo));
+      await login(email, password);
 
       // Remember email if checkbox is checked
       if (rememberMe) {
@@ -51,14 +48,24 @@ export default function SignIn() {
         localStorage.removeItem("rememberedEmail");
       }
 
-      // Navigate to dashboard or account
+      // Navigate to dashboard
       navigate('/dashboard/home');
     } catch (error) {
-      alert('Invalid credentials. Please try again.');
+      // Error is handled by the store
+      console.error('Login failed:', error);
     }
   };
-
   useEffect(() => {
+    // Clear any previous errors
+    clearError();
+    
+    // Test server connection when component mounts
+    testServerConnection().then(isConnected => {
+      if (!isConnected) {
+        console.error('Server connection test failed - backend may be down');
+      }
+    });
+    
     const savedEmail = localStorage.getItem("rememberedEmail");
     const tempEmail = localStorage.getItem("tempEmail");
     const tempPassword = localStorage.getItem("tempPassword");
@@ -72,7 +79,7 @@ export default function SignIn() {
       localStorage.removeItem("tempEmail");
       localStorage.removeItem("tempPassword");
     }
-  }, []);
+  }, [clearError]);
 
   return (
     <Layout>
@@ -81,6 +88,11 @@ export default function SignIn() {
           <div className="overflow-hidden bg-white rounded-2xl shadow-lg h-[516px] w-[896px] max-md:h-auto max-md:max-w-[600px] max-md:min-h-[500px] max-md:w-[90%] max-sm:w-full max-sm:h-auto max-sm:min-h-[480px]">
             <LoginHeader />
             <form onSubmit={handleSubmit} className="px-56 pt-9 max-md:px-10 max-sm:px-5">
+              {error && (
+                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                  {error}
+                </div>
+              )}
               <InputField
                 label="Email Address"
                 type="email"
@@ -102,8 +114,13 @@ export default function SignIn() {
               />
               <SignInButton
                 onClick={handleSubmit}
-                disabled={!email || !password}
+                disabled={!email || !password || isLoading}
               />
+              {isLoading && (
+                <div className="flex justify-center mt-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
+                </div>
+              )}
             </form>
             <SignUpLink onSignUpClick={handleSignUpClick} />
           </div>

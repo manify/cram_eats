@@ -1,15 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, ShoppingCart, Bell, MapPin } from 'lucide-react';
-import { useNotifications } from '../../contexts/NotificationContext';
-import { useCart } from '../../contexts/CartContext';
+import { useNotificationStore, useCartStore } from '../../stores';
 
 const HeaderClient: React.FC = () => {
   const navigate = useNavigate();
-  const { notifications } = useNotifications();
-  const { getCartItemCount } = useCart();
+  const { notifications, getUnreadCount } = useNotificationStore();
+  const { getCartItemCount } = useCartStore();
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = getUnreadCount();
   const cartCount = getCartItemCount();
   const location = localStorage.getItem("userLocation") || "25 Avenue des Mazades";
 

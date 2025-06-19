@@ -6,14 +6,13 @@ import {
 } from 'lucide-react';
 
 import { getRestaurantById, getMenuCategories } from '../data/restaurants';
-import { useCart } from '../contexts/CartContext';
-import { useNotifications } from '../contexts/NotificationContext';
+import { useCartStore, useNotificationStore } from '../stores';
 
 const RestaurantDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addToCart, getCartItemCount } = useCart();
-  const { addNotification } = useNotifications();
+  const { addToCart, getCartItemCount } = useCartStore();
+  const { addNotification } = useNotificationStore();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
 

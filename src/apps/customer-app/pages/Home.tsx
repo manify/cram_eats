@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import RestaurantCard from '../components/ui/RestaurantCard';
 import { ShoppingCart } from 'lucide-react';
-import { useCart } from '../contexts/CartContext';
+import { useCartStore, useRestaurantStore, useAuthStore } from '../stores';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { setLoading } from '../../../redux/store/features/orderSlice';
@@ -10,9 +10,9 @@ import { restaurants } from '../data/restaurants';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { items, getCartTotal } = useCart();
-  const userName = localStorage.getItem("userName") || "chaimaabaoub09";
-
+  const { items, getCartTotal, getCartItemCount } = useCartStore();
+  const { restaurants, isLoading, error, fetchRestaurants } = useRestaurantStore();
+  const { user } = useAuthStore();
   const cartTotal = getCartTotal();
   const cartItemCount = items.reduce((count, item) => count + item.quantity, 0);
 
@@ -83,7 +83,37 @@ const Home: React.FC = () => {
           <p className="text-lg">Discover amazing food from local restaurants</p>
         </div>
         <div className="text-4xl hidden sm:block">🍽️</div>
-      </div>
+      </div>      {/* Error State */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="flex items-center justify-between">
+            <span>{error}</span>
+            <div className="space-x-2">
+              <button 
+                onClick={() => fetchRestaurants(1, 20, true)} // Force refresh
+                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Loading...' : 'Retry'}
+              </button>
+              <button 
+                onClick={debugConnection}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                disabled={isLoading}
+              >
+                Debug
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+        </div>
+      )}
 
       {/* Featured Restaurants */}
       <section>

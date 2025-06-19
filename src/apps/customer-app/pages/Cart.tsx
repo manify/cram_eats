@@ -1,33 +1,32 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Minus, Trash2, ShoppingCart } from 'lucide-react';
-import { useCart } from '../contexts/CartContext';
-import { useNotifications } from '../contexts/NotificationContext';
+import { useCartStore, useNotificationStore } from '../stores';
 
 const Cart: React.FC = () => {
   const navigate = useNavigate();
-  const { items, updateQuantity, removeFromCart, getCartTotal, clearCart, placeOrder } = useCart();
-  const { addNotification } = useNotifications();
+  const { items, updateQuantity, removeFromCart, getCartTotal, clearCart, placeOrder } = useCartStore();
+  const { addNotification } = useNotificationStore();
 
   const subtotal = getCartTotal();
   const deliveryFee = subtotal > 0 ? 2.50 : 0;
   const total = subtotal + deliveryFee;
 
   const handlePlaceOrder = () => {
-  if (items.length === 0) return;
+    if (items.length === 0) return;
 
-  const orderId = placeOrder('25 Avenue des Mazades, 31200 Toulouse, France');
+    const orderId = placeOrder('25 Avenue des Mazades, 31200 Toulouse, France');
 
-  addNotification({
-    title: 'Order Placed Successfully',
-    message: `Your order #${orderId} has been placed and is being processed.`,
-    type: 'order',
-    read: false,
-  });
+    addNotification({
+      title: 'Order Placed Successfully',
+      message: `Your order #${orderId} has been placed and is being processed.`,
+      type: 'order',
+      read: false,
+    });
 
-  //  Redirect to Orders dashboard (which reads from useCart)
-  navigate('/dashboard/orders');
-};
+    // Redirect to Orders dashboard
+    navigate('/dashboard/orders');
+  };
 
 
   if (items.length === 0) {

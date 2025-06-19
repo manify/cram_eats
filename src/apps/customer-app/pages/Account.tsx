@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useCart } from '../contexts/CartContext';
+import { useCartStore } from '../stores';
 
 import {
   User,
