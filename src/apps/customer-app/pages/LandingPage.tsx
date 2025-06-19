@@ -41,17 +41,17 @@ interface PartnerCardProps {
 
 function PartnerCard({ image, title, description }: PartnerCardProps) {
   return (
-    <article className="grow shrink pb-4 min-w-60 w-[530px] max-md:max-w-full">
+    <article className="grow shrink pb-4 min-w-72 w-[650px] max-md:w-full max-md:max-w-full">
       <img
         src={image}
         alt={`${title} illustration`}
-        className="object-contain w-full rounded-2xl aspect-[1.78] max-md:max-w-full"
+        className="object-contain w-full rounded-2xl aspect-[1.5] max-md:max-w-full"
       />
-      <div className="mt-4 w-full max-md:max-w-full">
-        <h3 className="py-3.5 w-full text-3xl font-medium leading-none whitespace-nowrap text-neutral-900 max-md:max-w-full">
+      <div className="mt-6 w-full max-md:max-w-full">
+        <h3 className="py-4 w-full text-4xl font-bold leading-none text-neutral-900 max-md:max-w-full">
           {title}
         </h3>
-        <p className="py-3.5 w-full text-2xl leading-8 text-slate-500 max-md:max-w-full">
+        <p className="py-4 w-full text-2xl leading-9 text-slate-500 max-md:max-w-full">
           {description}
         </p>
       </div>
@@ -118,23 +118,23 @@ function HeroSection() {
         </div>
 
         <div className="ml-5 w-[55%] max-md:ml-0 max-md:w-full">
-         <div className="container mx-auto px-4">
-  <div className="flex flex-col md:flex-row items-center justify-between">
-    {/* Image Container */}
-    <div className="relative w-full md:w-1/3 mb-8 md:mb-0">
-      <img
-        src="https://cdn.builder.io/api/v1/image/assets/e212dd7ea28d4d5fb22c09ce9a305a74/e9ae7f6f3d4eb5c8b1753d5ec3d5f0b5837c8002?placeholderIfAbsent=true"
-        alt="Food delivery illustration"
-        className="w-[200px] md:w-[250px] mx-auto object-contain"
-      />
-    </div>
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col md:flex-row items-center justify-between">
+              {/* Image Container */}
+              <div className="relative w-full md:w-1/3 mb-8 md:mb-0">
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets/e212dd7ea28d4d5fb22c09ce9a305a74/e9ae7f6f3d4eb5c8b1753d5ec3d5f0b5837c8002?placeholderIfAbsent=true"
+                  alt="Food delivery illustration"
+                  className="w-[200px] md:w-[250px] mx-auto object-contain md:ml-14"
+                />
+              </div>
 
-    {/* Food Category Menu Container */}
-    <div className="w-full md:w-2/3">
-      <FoodCategoryMenu />
-    </div>
-  </div>
-</div>
+              {/* Food Category Menu Container */}
+              <div className="w-full md:w-2/3">
+                <FoodCategoryMenu />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -267,7 +267,7 @@ function PartnersSection() {
       </p>
 
       <div className="mt-16 w-full max-w-[1341px] min-h-[528px] max-md:mt-10 max-md:max-w-full">
-        <div className="flex flex-wrap gap-4 w-full min-h-[503px] max-md:max-w-full">
+        <div className="flex flex-row gap-8 w-full min-h-[503px] justify-center max-md:flex-col max-md:gap-4 max-md:max-w-full">
           {partners.map((partner, index) => (
             <PartnerCard key={index} {...partner} />
           ))}

@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {driverAuth}  from "../api/Auth/driverAuth";
 
 import Layout from "../../customer-app/components/ui/Layout";
 import { InputField } from "../../customer-app/components/ui/input";
@@ -44,7 +43,18 @@ const DriverSignUp: React.FC = () => {
     setError("");
 
     try {
-      await driverAuth.register(formData); // Use register instead of login
+      // Use the same endpoint as driverAuth
+      const response = await fetch('http://localhost:3030/crameats/login-delivery-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      if (!response.ok) {
+        throw new Error('Registration failed');
+      }
+      await response.json();
       navigate("/driver/signin", { replace: true });
     } catch (err) {
       setError("Failed to create account. Please try again.");

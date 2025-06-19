@@ -15,8 +15,8 @@ interface DriverData {
 
 export const driverAuth = {
   login: async (credentials: LoginCredentials) => {
-    // Replace with your actual API call
-    const response = await fetch('/api/driver/login', {
+    // Use actual backend API endpoint
+    const response = await fetch('http://localhost:3030/crameats/login-delivery-account', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -35,7 +35,7 @@ export const driverAuth = {
 
   register: async (driverData: DriverData) => {
     // Replace with your actual API call
-    const response = await fetch('/api/driver/register', {
+    const response = await fetch('http://localhost:3030/crameats/create-delivery-account', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

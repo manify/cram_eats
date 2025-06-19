@@ -16,40 +16,39 @@ const MenuView: React.FC = () => {
 
   // Fetch all items for this restaurant
   useEffect(() => {
-  setLoading(true);
-  axios
-    .get('http://localhost:3030/crameats/items')
-    .then(res => {
-      console.log('Fetched items:', res.data); // <--- Add this line
-      if (Array.isArray(res.data)) {
-        setMenuItems(res.data);
-      } else if (Array.isArray(res.data.items)) {
-        setMenuItems(res.data.items);
-      } else {
-        setMenuItems([]);
-      }
-    })
-    .catch(() => setMenuItems([]))
-    .finally(() => setLoading(false));
-}, []);
+    if (!restaurantId) return;
+    setLoading(true);
+    axios
+      .get(`http://localhost:3030/crameats/restaurants/${restaurantId}/items`)
+      .then(res => {
+        if (Array.isArray(res.data)) {
+          setMenuItems(res.data);
+        } else if (Array.isArray(res.data.items)) {
+          setMenuItems(res.data.items);
+        } else {
+          setMenuItems([]);
+        }
+      })
+      .catch(() => setMenuItems([]))
+      .finally(() => setLoading(false));
+  }, [restaurantId]);
 
   // Add item
-const handleAddItem = async (newItem: Omit<MenuItem, 'id'>) => {
-  if (!restaurantId) return;
-  try {
-    await axios.post(
-      `http://localhost:3030/crameats/restaurants/${restaurantId}/items`,
-      newItem
-    );
-    // Refetch items after add
-    const res = await axios.get('http://localhost:3030/crameats/items');
-    console.log('Fetched after add:', res.data); // <--- Add this line
-    setMenuItems(Array.isArray(res.data) ? res.data : res.data.items || []);
-    setIsAddModalOpen(false);
-  } catch (err) {
-    alert('Failed to add menu item');
-  }
-};
+  const handleAddItem = async (newItem: Omit<MenuItem, 'id'>) => {
+    if (!restaurantId) return;
+    try {
+      await axios.post(
+        `http://localhost:3030/crameats/restaurants/${restaurantId}/items`,
+        newItem
+      );
+      // Refetch items after add
+      const res = await axios.get(`http://localhost:3030/crameats/restaurants/${restaurantId}/items`);
+      setMenuItems(Array.isArray(res.data) ? res.data : res.data.items || []);
+      setIsAddModalOpen(false);
+    } catch (err) {
+      alert('Failed to add menu item');
+    }
+  };
 
   // Edit item
   const handleEditItem = async (updatedItem: MenuItem) => {

@@ -87,7 +87,7 @@ const AppContent: React.FC = () => {
       {/* Main Routes */}
       <Routes>
         {/* ─── Landing & Authentication ─── */}
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<LandingPage  />}/>
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

@@ -9,7 +9,7 @@ export interface RestaurantSignupData {
   restaurantName: string;
   restaurantLat: number;
   restaurantLong: number;
-  restaurantAddress: string; // Make sure this matches what the backend expects
+  restaurantAddress: string;
   openingHours: string;
   closingHours: string;
   workingDays: string[];
@@ -20,11 +20,30 @@ export interface RestaurantSignupData {
 
 export default async function signup(data: RestaurantSignupData) {
   try {
-    console.log('Making request with data:', JSON.stringify(data, null, 2));
+    // Transform data to match backend expectations
+    const payload = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      password: data.password,
+      role: data.role,
+      restaurantName: data.restaurantName,
+      latitude: data.restaurantLat, // Change key if backend expects 'latitude'
+      longitude: data.restaurantLong, // Change key if backend expects 'longitude'
+      address: data.restaurantAddress, // Change key if backend expects 'address'
+      openingHours: data.openingHours,
+      closingHours: data.closingHours,
+      workingDays: data.workingDays,
+      phoneNumber: data.phoneNumber,
+      cuisineType: data.cuisineType,
+      businessLicense: data.businessLicense,
+    };
+
+    console.log('Making request with data:', JSON.stringify(payload, null, 2));
     
     const response = await axios.post(
-      'http://localhost:3001/auth/create-restaurant-account',
-      data,
+      'http://localhost:3030/crameats/create-restaurant-account',
+      payload,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -32,7 +51,12 @@ export default async function signup(data: RestaurantSignupData) {
       }
     );
 
-    console.log('Response from server:', response.data);
+    if (!response.data || response.data.error) {
+      console.error('Signup failed:', response.data);
+      throw new Error(response.data?.message || 'Signup failed');
+    }
+
+    console.log('Signup successful:', response.data);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {

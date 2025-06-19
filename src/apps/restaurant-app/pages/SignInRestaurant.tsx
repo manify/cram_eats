@@ -34,19 +34,16 @@ const SignInRestaurant: React.FC = () => {
 
     try {
       await restaurantAuth.login({ email, password });
-
-      // Remember Me
       if (rememberMe) {
         localStorage.setItem("rememberedRestaurantEmail", email);
       } else {
         localStorage.removeItem("rememberedRestaurantEmail");
       }
-
-      setTimeout(() => {
-        navigate("/restaurantdashboard", { replace: true });
-      }, 100);
-    } catch (err) {
-      setError("Invalid credentials");
+      navigate("/restaurantdashboard", { replace: true });
+    } catch (err: any) {
+      // Log the error for debugging
+      console.error("Login error:", err);
+      setError(err?.message || "Invalid credentials");
     } finally {
       setIsLoading(false);
     }

@@ -20,7 +20,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
     description: '',
     price: '',
     category: 'mains' as MenuItem['category'],
-    image: '',
+
     isAvailable: true
   });
 
@@ -32,7 +32,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
         description: initialData.description,
         price: initialData.price.toString(),
         category: initialData.category,
-        image: initialData.image || '',
+
         isAvailable: initialData.isAvailable
       });
     } else {
@@ -42,7 +42,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
         description: '',
         price: '',
         category: 'mains',
-        image: '',
+
         isAvailable: true
       });
     }
@@ -50,12 +50,21 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Prevent double submit or empty name/price
+    if (!formData.name.trim() || !formData.price) return;
     onSubmit({
       ...formData,
-      price: parseFloat(formData.price)
+      price: Number(formData.price), // ensure price is a number
     });
-    onClose();
-  };
+    // Optionally reset form after submit
+    setFormData({
+      name: '',
+      description: '',
+      price: '',
+      category: 'mains',
+      isAvailable: true
+    });
+};
 
   if (!isOpen) return null;
 
@@ -127,7 +136,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
             </select>
           </div>
 
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Image URL
             </label>
@@ -137,16 +146,13 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
               onChange={(e) => setFormData({ ...formData, image: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
             />
-          </div>
+          </div> */}
 
           <div className="pt-4">
-            <button
-              type="submit"
-              className="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-medium py-2 px-4 rounded-lg transition-colors duration-200"
-            >
-              Add Item
-            </button>
-          </div>
+  <button type="submit" className="bg-yellow-500 text-white px-4 py-2 rounded-lg">
+    Add
+  </button>
+</div>
         </form>
       </div>
     </div>

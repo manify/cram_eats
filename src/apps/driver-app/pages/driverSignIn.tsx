@@ -33,7 +33,7 @@ const SignInDriver: React.FC = () => {
     setError("");
 
     try {
-      // Use the login method from driverAuth
+      // Use the login method from driverAuth (already points to backend)
       await driverAuth.login({ email, password });
 
       // Remember Me

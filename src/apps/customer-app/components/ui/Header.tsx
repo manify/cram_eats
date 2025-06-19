@@ -1,6 +1,7 @@
 import React, { Dispatch, SetStateAction, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'react-feather';
+import { Palette } from "lucide-react";
 import { ColorFilterType } from '../../../../types/colorFilter';
 
 interface HeaderProps {
@@ -10,6 +11,7 @@ interface HeaderProps {
 
 export default function Header({ colorFilter, setColorFilter }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showColorMenu, setShowColorMenu] = useState(false);
   const navigate = useNavigate();
 
   const handleOrderNowClick = () => {
@@ -73,19 +75,36 @@ export default function Header({ colorFilter, setColorFilter }: HeaderProps) {
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
-          <div className="hidden md:flex items-center gap-3">
-            <label htmlFor="cb-mode" className="text-sm text-neutral-700">Colorblind Mode:</label>
-            <select
-              id="cb-mode"
-              value={colorFilter}
-              onChange={(e) => setColorFilter(e.target.value as typeof colorFilter)}
-              className="text-sm border rounded px-2 py-1"
+          {/* Colorblind Mode Circular Icon */}
+          <div className="hidden md:flex items-center gap-3 relative">
+            <button
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-gray-300 hover:bg-amber-100 transition-colors shadow"
+              onClick={() => setShowColorMenu((v) => !v)}
+              aria-label="Colorblind Mode"
+              type="button"
             >
-              <option value="none">Normal</option>
-              <option value="deuteranopia">Deuteranopia</option>
-              <option value="protanopia">Protanopia</option>
-              <option value="tritanopia">Tritanopia</option>
-            </select>
+              <Palette size={22} className="text-amber-500" />
+            </button>
+            {showColorMenu && (
+              <div className="absolute right-0 mt-12 bg-white border rounded-xl shadow-lg p-3 z-50 min-w-[160px]">
+                <label className="block text-sm text-neutral-700 mb-2 font-semibold">
+                  Colorblind Mode
+                </label>
+                <select
+                  value={colorFilter}
+                  onChange={(e) => {
+                    setColorFilter(e.target.value as typeof colorFilter);
+                    setShowColorMenu(false);
+                  }}
+                  className="w-full text-sm border rounded px-2 py-1"
+                >
+                  <option value="none">Normal</option>
+                  <option value="deuteranopia">Deuteranopia</option>
+                  <option value="protanopia">Protanopia</option>
+                  <option value="tritanopia">Tritanopia</option>
+                </select>
+              </div>
+            )}
           </div>
         </div>
 
