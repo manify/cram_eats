@@ -13,12 +13,13 @@ export interface OrderCardProps {
   items: Item[];
   restaurant: string;
   status:
-    | 'pending'
-    | 'confirmed'
-    | 'preparing'
-    | 'out_for_delivery'
-    | 'delivered'
-    | 'cancelled';
+    | 'PENDING'
+    | 'CONFIRMED'
+    | 'PREPARING'
+    | 'READY'
+    | 'OUT_FOR_DELIVERY'
+    | 'DELIVERED'
+    | 'CANCELLED';
   orderTime: string;
   estimatedDelivery?: string;
   total: number;
@@ -28,22 +29,24 @@ export interface OrderCardProps {
 /* colour helpers */
 const badgeColour = (s: OrderCardProps['status']) =>
   ({
-    pending:           'bg-gray-100 text-gray-600',
-    confirmed:         'bg-blue-100 text-blue-600',
-    preparing:         'bg-orange-100 text-orange-600',
-    out_for_delivery:  'bg-orange-100 text-orange-600',
-    delivered:         'bg-green-100 text-green-600',
-    cancelled:         'bg-red-100 text-red-600',
+    PENDING:           'bg-gray-100 text-gray-600',
+    CONFIRMED:         'bg-blue-100 text-blue-600',
+    PREPARING:         'bg-orange-100 text-orange-600',
+    READY:             'bg-purple-100 text-purple-600',
+    OUT_FOR_DELIVERY:  'bg-indigo-100 text-indigo-600',
+    DELIVERED:         'bg-green-100 text-green-600',
+    CANCELLED:         'bg-red-100 text-red-600',
   }[s]);
 
 const badgeText = (s: OrderCardProps['status']) =>
   ({
-    pending:          'Pending',
-    confirmed:        'Confirmed',
-    preparing:        'Being Prepared',
-    out_for_delivery: 'Out for Delivery',
-    delivered:        'Delivered',
-    cancelled:        'Cancelled',
+    PENDING:          'Pending',
+    CONFIRMED:        'Confirmed',
+    PREPARING:        'Being Prepared',
+    READY:            'Ready for Pickup',
+    OUT_FOR_DELIVERY: 'Out for Delivery',
+    DELIVERED:        'Delivered',
+    CANCELLED:        'Cancelled',
   }[s]);
 
 /* ――― CARD ――― */
@@ -104,16 +107,13 @@ const OrderCard: React.FC<OrderCardProps> = ({
         <div className="flex items-center gap-1">
           <Clock className="w-4 h-4" />
           <span>Ordered at {orderTime}</span>
-        </div>
-        {estimatedDelivery && status !== 'delivered' && (
+        </div>        {estimatedDelivery && status !== 'DELIVERED' && (
           <div className="flex items-center gap-1">
             <MapPin className="w-4 h-4" />
             <span>Est. {estimatedDelivery}</span>
           </div>
         )}
-      </div>
-
-      {status !== 'delivered' && status !== 'cancelled' && (
+      </div>      {status !== 'DELIVERED' && status !== 'CANCELLED' && (
         <div className="flex flex-col sm:flex-row gap-3 pt-4">
           <button
             onClick={onTrackOrder}

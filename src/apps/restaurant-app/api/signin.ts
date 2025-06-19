@@ -1,5 +1,5 @@
 export default async function signin(email: string, password: string) {
-  const response = await fetch('http://localhost:3001/crameats/login-restaurant-account', {
+  const response = await fetch('http://localhost:3030/auth/login-restaurant-account', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

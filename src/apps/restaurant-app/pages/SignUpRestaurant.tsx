@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { restaurantAuth } from '../api/Auth/restaurantAuth';
 import Layout from '../../customer-app/components/ui/Layout';
 
 export const SignUpRestaurant: React.FC = () => {
@@ -75,25 +75,27 @@ export const SignUpRestaurant: React.FC = () => {
     if (!agreed) {
       setError('You must agree to the terms');
       return;
-    }
-
-    try {
+    }    try {
       setLoading(true);
       setError('');
       const { confirmPassword, ...signupData } = formData;
 
-      // Use your backend API to create the restaurant
-      await axios.post('http://localhost:3001/auth/create-restaurant-account', signupData, {
-        headers: { 'Content-Type': 'application/json' }
-      });
+      // Use the restaurantAuth service which calls the correct API endpoint
+      const authSignupData = {
+        restaurantName: signupData.restaurantName,
+        ownerName: `${signupData.firstName} ${signupData.lastName}`,
+        email: signupData.email,
+        password: signupData.password,
+        address: signupData.restaurantAddress,
+        phone: signupData.phoneNumber,
+        cuisine: signupData.cuisineType
+      };
 
-      // Optionally, set authentication here if your backend returns a token
-      // localStorage.setItem('restaurantUser', JSON.stringify(response.data));
-      // localStorage.setItem('restaurantToken', response.data.token);
+      await restaurantAuth.signup(authSignupData);
 
       navigate('/restaurantdashboard');
     } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || 'Signup failed');
+      setError(err?.message || 'Signup failed');
     } finally {
       setLoading(false);
     }

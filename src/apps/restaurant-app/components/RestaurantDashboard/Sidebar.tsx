@@ -13,9 +13,17 @@ interface SidebarProps {
   currentView: string;
   onViewChange: (view: string) => void;
   onLogout?: () => void;
+  restaurantName?: string;
+  isOpen?: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, onLogout }) => {
+const Sidebar: React.FC<SidebarProps> = ({ 
+  currentView, 
+  onViewChange, 
+  onLogout, 
+  restaurantName, 
+  isOpen 
+}) => {
   return (
     <div className="fixed top-0 left-0 w-64 h-screen bg-white border-r border-gray-200 overflow-y-auto">
       <div className="p-6">

@@ -63,7 +63,9 @@ const Home: React.FC = () => {
 
   const popularRestaurants = restaurants
     .slice(0, 8)
-    .map(transformRestaurantData);  return (
+    .map(transformRestaurantData);
+
+  return (
     <div className="space-y-8 animate-fade-in">
       {/* Green Welcome Box */}
       <div className="bg-green-500 text-white rounded-2xl p-6 flex justify-between items-center">
@@ -72,7 +74,9 @@ const Home: React.FC = () => {
           <p className="text-lg">Discover amazing food from local restaurants</p>
         </div>
         <div className="text-4xl hidden sm:block">🍽️</div>
-      </div>{/* Error State */}
+      </div>
+
+      {/* Error State */}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           <div className="flex items-center justify-between">
@@ -102,7 +106,9 @@ const Home: React.FC = () => {
         <div className="flex justify-center items-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
         </div>
-      )}      {/* Featured Restaurants */}
+      )}
+
+      {/* Featured Restaurants */}
       {!isLoading && featuredRestaurants.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-6">

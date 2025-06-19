@@ -1,9 +1,10 @@
-import { mockRestaurants, RestaurantUser } from '../../components/RestaurantDashboard/data/resCredentials';
+import axios from 'axios';
 
 interface LoginCredentials {
   email: string;
   password: string;
 }
+
 interface SignupData {
   restaurantName: string;
   ownerName: string;
@@ -14,27 +15,69 @@ interface SignupData {
   cuisine: string;
 }
 
+interface RestaurantUser {
+  id: string;
+  restaurantName: string;
+  ownerName: string;
+  email: string;
+  address: string;
+  phone: string;
+  cuisine: string;
+}
+
+interface LoginResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    user: RestaurantUser;
+    token: string;
+  };
+}
 
 class RestaurantAuthService {
+  private baseURL = 'http://localhost:3030';
+
   login = async (credentials: LoginCredentials): Promise<RestaurantUser> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const response = await axios.post<LoginResponse>(
+        `${this.baseURL}/auth/login-restaurant-account`,
+        credentials,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-    const restaurant = mockRestaurants.find(
-      r => r.email === credentials.email && r.password === credentials.password
-    );
-
-    if (!restaurant) {
-      throw new Error('Invalid credentials');
+      if (response.data.success && response.data.data) {
+        const { user, token } = response.data.data;
+        
+        // Store user data and token in localStorage
+        localStorage.setItem('restaurantUser', JSON.stringify(user));
+        localStorage.setItem('restaurantToken', token);
+        localStorage.setItem('restaurantId', user.id);
+        
+        return user;
+      } else {
+        throw new Error(response.data.message || 'Login failed');
+      }
+    } catch (error: any) {
+      if (error.response) {
+        // Server responded with an error status
+        throw new Error(error.response.data?.message || 'Invalid credentials');
+      } else if (error.request) {
+        // Request was made but no response received
+        throw new Error('Unable to connect to server. Please try again.');
+      } else {
+        // Something else happened
+        throw new Error(error.message || 'Login failed');
+      }
     }
-
-    localStorage.setItem('restaurantUser', JSON.stringify(restaurant));
-    localStorage.setItem('restaurantToken', 'mock-jwt-token');
-    return restaurant;
   };
-
   logout = () => {
     localStorage.removeItem('restaurantUser');
     localStorage.removeItem('restaurantToken');
+    localStorage.removeItem('restaurantId');
   };
 
   getCurrentUser = (): RestaurantUser | null => {
@@ -46,27 +89,42 @@ class RestaurantAuthService {
     return !!(localStorage.getItem('restaurantUser') && localStorage.getItem('restaurantToken'));
   };
   
-   signup = async (data: SignupData): Promise<RestaurantUser> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
+  signup = async (data: SignupData): Promise<RestaurantUser> => {
+    try {
+      const response = await axios.post<LoginResponse>(
+        `${this.baseURL}/auth/register-restaurant-account`,
+        data,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-    // Check if email already exists
-    if (mockRestaurants.some(r => r.email === data.email)) {
-      throw new Error('Email already registered');
+      if (response.data.success && response.data.data) {
+        const { user, token } = response.data.data;
+        
+        // Store user data and token in localStorage
+        localStorage.setItem('restaurantUser', JSON.stringify(user));
+        localStorage.setItem('restaurantToken', token);
+        localStorage.setItem('restaurantId', user.id);
+        
+        return user;
+      } else {
+        throw new Error(response.data.message || 'Registration failed');
+      }
+    } catch (error: any) {
+      if (error.response) {
+        // Server responded with an error status
+        throw new Error(error.response.data?.message || 'Registration failed');
+      } else if (error.request) {
+        // Request was made but no response received
+        throw new Error('Unable to connect to server. Please try again.');
+      } else {
+        // Something else happened
+        throw new Error(error.message || 'Registration failed');
+      }
     }
-
-    const newRestaurant: RestaurantUser = {
-      ...data,
-      id: `rest${mockRestaurants.length + 1}`
-    };
-
-    // In a real app, you would save this to a database
-    mockRestaurants.push(newRestaurant);
-
-    // Store user data in localStorage
-    localStorage.setItem('restaurantUser', JSON.stringify(newRestaurant));
-    localStorage.setItem('restaurantToken', 'mock-jwt-token');
-    
-    return newRestaurant;
   };
 }
 

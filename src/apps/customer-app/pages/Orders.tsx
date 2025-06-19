@@ -9,19 +9,26 @@ import OrderCard from '../components/ui/OrderCard';
  * (uses CartStore → orders[])
  */
 const Orders: React.FC = () => {
-  const { orders } = useCartStore();
+  const { orders, fetchUserOrders } = useCartStore();
   const navigate = useNavigate();
+
+  // Fetch orders from backend when component mounts
+  React.useEffect(() => {
+    fetchUserOrders();
+  }, [fetchUserOrders]);
 
   /* ─ helpers ─────────────────────────────────────────── */
   const stats = React.useMemo(() => {
     const total     = orders.length;
-    const delivered = orders.filter(o => o.status === 'delivered').length;
+    const delivered = orders.filter(o => o.status === 'DELIVERED').length;
     const active    = total - delivered;                         // every non-delivered order
     return { total, active, delivered };
   }, [orders]);
-
-  const fmtTime = (d?: Date) =>
-    d?.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) ?? undefined;
+  const fmtTime = (d?: Date | string) => {
+    if (!d) return undefined;
+    const date = d instanceof Date ? d : new Date(d);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  };
 
   /* ─ render ───────────────────────────────────────────── */
   return (
