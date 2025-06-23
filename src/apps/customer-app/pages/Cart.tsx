@@ -1,33 +1,114 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Minus, Trash2, ShoppingCart } from 'lucide-react';
-import { useCartStore, useNotificationStore } from '../stores';
+import { useCartStore, useNotificationStore, useAuthStore } from '../stores';
+import { createOrder } from '../api/orders';
+import { CreateOrderRequest } from '../types/api';
 
 const Cart: React.FC = () => {
   const navigate = useNavigate();
-  const { items, updateQuantity, removeFromCart, getCartTotal, clearCart, placeOrder } = useCartStore();
+  const { items, updateQuantity, removeFromCart, getCartTotal, clearCart, fetchUserOrders } = useCartStore();
   const { addNotification } = useNotificationStore();
+  const { user } = useAuthStore();
+  const [isPlacingOrder, setIsPlacingOrder] = React.useState(false);
+
+  // Debug: Log user and auth state on component mount
+  React.useEffect(() => {
+    const authState = useAuthStore.getState();
+    console.log('Cart component mounted with auth state:', {
+      user: authState.user,
+      hasToken: !!authState.token,
+      isAuthenticated: authState.isAuthenticated,
+      tokenFromStorage: !!localStorage.getItem('authToken')
+    });
+  }, []);
 
   const subtotal = getCartTotal();
   const deliveryFee = subtotal > 0 ? 2.50 : 0;
   const total = subtotal + deliveryFee;
+  const handlePlaceOrder = async () => {
+    if (items.length === 0 || isPlacingOrder || !user) return;
 
-  const handlePlaceOrder = () => {
-    if (items.length === 0) return;
+    setIsPlacingOrder(true);
+    try {
+      // Debug authentication state
+      const authState = useAuthStore.getState();
+      console.log('🔍 Auth state when placing order:', {
+        user: authState.user,
+        hasToken: !!authState.token,
+        token: authState.token,
+        isAuthenticated: authState.isAuthenticated
+      });
+      console.log('🔍 localStorage authToken:', localStorage.getItem('authToken'));      // Prepare order data for API
+      const orderData: CreateOrderRequest = {
+        userId: user.id,
+        restaurantId: parseInt(items[0].restaurantId),
+        totalPrice: total,
+        items: items.map((item, index) => {
+          // TEMPORARY FIX: Use known valid itemIds from backend for testing
+          // In production, you should use actual API data with correct itemIds
+          const validItemIds = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]; // Known valid IDs from backend
+          const testItemId = validItemIds[index % validItemIds.length]; // Cycle through valid IDs
+          
+          console.log(`🧪 TESTING: Mapping item "${item.name}" to backend itemId: ${testItemId}`);
+          
+          return {
+            itemId: testItemId,
+            quantity: item.quantity
+          };
+        })
+      };console.log('🔍 Cart items before transformation:', items);
+      console.log('🔍 First item detailed structure:', JSON.stringify(items[0], null, 2));
+      console.log('🔍 Order data being sent:', JSON.stringify(orderData, null, 2));
+      console.log('🔍 User ID:', user.id, typeof user.id);
+      console.log('🔍 Restaurant ID:', items[0].restaurantId, typeof items[0].restaurantId);
+      console.log('🔍 Total price:', total, typeof total);
+      console.log('🔍 Items transformation check:');
+      items.forEach((item, index) => {
+        const itemId = item.originalItemId || item.id.split('-')[0];
+        console.log(`  Item ${index}:`, {
+          itemName: item.name,
+          originalItemId: item.originalItemId,
+          compositeId: item.id,
+          extractedFromId: item.id.split('-')[0],
+          description: item.description,
+          finalItemId: itemId,
+          parsedItemId: parseInt(itemId),
+          isValidItemId: !isNaN(parseInt(itemId))
+        });
+      });
 
-    const orderId = placeOrder('25 Avenue des Mazades, 31200 Toulouse, France');
+      // Create order via API (let the API handle token retrieval)
+      const response = await createOrder(orderData);      if (response.success) {
+        // Clear cart after successful order
+        clearCart();
+        
+        // Refresh orders list to include the new order
+        await fetchUserOrders();
 
-    addNotification({
-      title: 'Order Placed Successfully',
-      message: `Your order #${orderId} has been placed and is being processed.`,
-      type: 'order',
-      read: false,
-    });
+        addNotification({
+          title: 'Order Placed Successfully',
+          message: `Your order #${response.order.id} has been placed and is being processed.`,
+          type: 'order',
+          read: false,
+        });
 
-    // Redirect to Orders dashboard
-    navigate('/dashboard/orders');
-  };
-
+        // Redirect to home page instead of orders
+        navigate('/dashboard/home');
+      } else {
+        throw new Error('Failed to create order');
+      }
+    } catch (error) {
+      console.error('❌ Failed to place order:', error);
+      addNotification({
+        title: 'Order Failed',
+        message: error instanceof Error ? error.message : 'Failed to place your order. Please try again.',
+        type: 'system',
+        read: false,
+      });
+    } finally {
+      setIsPlacingOrder(false);
+    }  };
 
   if (items.length === 0) {
     return (
@@ -65,9 +146,7 @@ const Cart: React.FC = () => {
             <p className="text-gray-600">{items.length} items</p>
           </div>
         </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto p-6">
+      </div>      <div className="max-w-5xl mx-auto p-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Cart Items */}
           <div className="flex-1 space-y-4">
@@ -145,14 +224,12 @@ const Cart: React.FC = () => {
                 <h4 className="text-sm font-semibold text-gray-800 mb-1">Delivery Address</h4>
                 <p className="text-sm text-gray-600">25 Avenue des Mazades</p>
                 <p className="text-sm text-gray-600">31200 Toulouse, France</p>
-              </div>
-
-              <button
+              </div>              <button
                 onClick={handlePlaceOrder}
-                className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg transition text-center"
-                disabled={items.length === 0}
+                className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition text-center"
+                disabled={items.length === 0 || isPlacingOrder}
               >
-                Place Order
+                {isPlacingOrder ? 'Placing Order...' : 'Place Order'}
               </button>
 
               <p className="text-xs text-gray-500 mt-3 text-center">

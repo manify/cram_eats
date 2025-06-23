@@ -70,13 +70,13 @@ const RestaurantPage: React.FC = () => {
     : selectedRestaurant.menu
         .filter(menu => menu.name === selectedCategory)
         .flatMap(menu => menu.items.map(item => ({ ...item.item, menuName: menu.name })));
-
   const handleAddToCart = (item: any) => {
     const quantity = quantities[item.id] || 1;
 
     for (let i = 0; i < quantity; i++) {
       addToCart({
         id: `${item.id}-${Date.now()}-${i}`,
+        originalItemId: item.itemId || item.id, // Use itemId if available, fallback to id
         name: item.name,
         description: item.itemId, // Using itemId as description since API doesn't provide description
         price: item.price,

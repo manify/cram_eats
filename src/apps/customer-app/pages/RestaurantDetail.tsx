@@ -36,13 +36,13 @@ const RestaurantDetail: React.FC = () => {
   const filteredMenu = selectedCategory === 'All'
     ? restaurant.menu
     : restaurant.menu.filter((item) => item.category === selectedCategory);
-
   const handleAddToCart = (item: any) => {
     const quantity = quantities[item.id] || 1;
 
     for (let i = 0; i < quantity; i++) {
       addToCart({
         id: `${item.id}-${Date.now()}-${i}`,
+        originalItemId: item.itemId || item.id, // Use itemId if available, fallback to id
         name: item.name,
         description: item.description,
         price: item.price,

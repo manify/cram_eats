@@ -17,7 +17,7 @@ const authApiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Only enable for authenticated requests
+  withCredentials: false, // Disable credentials to avoid CORS issues
 });
 
 // Request interceptor for general API

@@ -23,7 +23,8 @@ interface RestaurantProfile {
   isOpen: boolean;
 }
 
-export const RestaurantDashboard: React.FC = () => {  const navigate = useNavigate();
+export const RestaurantDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<'dashboard' | 'orders' | 'menu' | 'items' | 'reviews' | 'stats' | 'account'>('dashboard');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -237,7 +238,6 @@ export const RestaurantDashboard: React.FC = () => {  const navigate = useNaviga
   const handleCreateDeal = async (deal: Deal) => setDeals(prev => [...prev, deal]);
   const handleRemoveDeal = async (dealId: string) =>
     setDeals(prev => prev.filter(deal => deal.id !== dealId));
-
   const handleLogout = () => {
     localStorage.removeItem('restaurantToken');
     localStorage.removeItem('restaurantUser');
@@ -248,12 +248,13 @@ export const RestaurantDashboard: React.FC = () => {  const navigate = useNaviga
   // Render different views based on currentView
   if (currentView === 'orders') {
     return (
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-gray-50 mt-16">
         <Sidebar 
           currentView={currentView}
           onViewChange={handleViewChange}
         />
-        <div className="flex-1 overflow-auto">          <OrdersView
+        <div className="flex-1 overflow-auto ml-64">
+          <OrdersView
             orders={orders}
             onViewOrder={handleViewOrder}
             onUpdateOrderStatus={handleUpdateOrderStatus}
@@ -262,15 +263,15 @@ export const RestaurantDashboard: React.FC = () => {  const navigate = useNaviga
       </div>
     );
   }
-
   if (currentView === 'menu') {
     return (
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-gray-50 mt-16">
         <Sidebar
           currentView={currentView}
           onViewChange={handleViewChange}
         />
-        <div className="flex-1 overflow-auto">          <MenuView
+        <div className="flex-1 overflow-auto ml-64">
+          <MenuView
             menuItems={menuItems}
             deals={deals}
             onAddItem={handleAddMenuItem}
@@ -285,15 +286,14 @@ export const RestaurantDashboard: React.FC = () => {  const navigate = useNaviga
       </div>
     );
   }
-
   if (currentView === 'account') {
     return (
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-gray-50 mt-16">
         <Sidebar 
           currentView={currentView}
           onViewChange={handleViewChange}
         />
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto ml-64">
           <ProfileSettings 
             profile={profile}
             onUpdateProfile={setProfile}
@@ -301,19 +301,18 @@ export const RestaurantDashboard: React.FC = () => {  const navigate = useNaviga
         </div>
       </div>
     );
-  }
-  // Dashboard view (default)
+  }  // Dashboard view (default)
   const deliveredOrders = orders.filter(order => order.status === 'delivered');
   const totalRevenue = deliveredOrders.reduce((sum, order) => sum + (order.total || 0), 0);
   const recentOrders = orders.slice(0, 5);
-
+  
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 mt-16">
       <Sidebar 
         currentView={currentView}
         onViewChange={handleViewChange}
       />
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto ml-64">
         <div className="p-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
@@ -392,8 +391,7 @@ export const RestaurantDashboard: React.FC = () => {  const navigate = useNaviga
                     When customers place orders, they'll appear here.
                   </p>
                 </div>
-              )}
-            </div>
+              )}            </div>
           </div>
         </div>
       </div>

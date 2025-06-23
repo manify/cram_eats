@@ -37,11 +37,15 @@ export const useAuthStore = create<AuthState>()(
       error: null,      login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response: AuthResponse = await signIn(email, password);
+          const response: AuthResponse = await signIn(email, password);          console.log('🔍 Login response:', response);
           
           // Extract user data and token from response
           const userData = response.data.user;
-          const token = response.token || null;
+          const token = response.data.token;  // Token is inside data object
+          
+          console.log('🔍 Extracted token:', token);
+          console.log('🔍 Token type:', typeof token);
+          console.log('🔍 User data:', userData);
           
           set({
             user: userData,
@@ -57,7 +61,10 @@ export const useAuthStore = create<AuthState>()(
           localStorage.setItem('userEmail', userData.email);
           if (token) {
             localStorage.setItem('authToken', token);
-          }        } catch (error: any) {
+            console.log('✅ Token stored in localStorage:', token);
+          } else {
+            console.log('❌ No token received from backend');
+          }} catch (error: any) {
           console.error('Login error:', error);
           let errorMessage = 'Login failed';
           
@@ -87,10 +94,9 @@ export const useAuthStore = create<AuthState>()(
             userData.password,
             userData.role
           );
-          
-          // Extract user data and token from response
+            // Extract user data and token from response
           const user = response.data.user;
-          const token = response.token || null;
+          const token = response.data.token;
           
           set({
             user: user,

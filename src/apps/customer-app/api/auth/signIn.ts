@@ -5,5 +5,7 @@ export default async function signIn(email: string, password: string) {
     email,
     password
   });
+  
+  console.log('🔍 Raw backend response:', response.data);
   return response.data;
 }

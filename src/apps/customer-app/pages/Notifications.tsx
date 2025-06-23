@@ -17,10 +17,17 @@ const Notifications: React.FC = () => {
         return <Bell className="w-5 h-5 text-gray-600" />;
     }
   };
-
-  const formatTime = (timestamp: Date) => {
+  const formatTime = (timestamp: Date | string) => {
     const now = new Date();
-    const diff = now.getTime() - timestamp.getTime();
+    // Handle both Date objects and date strings
+    const timestampDate = timestamp instanceof Date ? timestamp : new Date(timestamp);
+    
+    // Check if the date is valid
+    if (isNaN(timestampDate.getTime())) {
+      return 'Unknown time';
+    }
+    
+    const diff = now.getTime() - timestampDate.getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);

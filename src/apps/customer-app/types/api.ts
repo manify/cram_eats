@@ -62,10 +62,10 @@ export interface RestaurantsResponse {
 export interface AuthResponse {
   success: boolean;
   message: string;
-  token?: string;
   data: {
     user: User;
     expiresIn: string;
+    token: string;
   };
 }
 

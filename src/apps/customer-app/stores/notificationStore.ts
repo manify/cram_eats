@@ -7,7 +7,7 @@ export interface Notification {
   message: string;
   type: 'order' | 'promotion' | 'system';
   read: boolean;
-  timestamp: Date;
+  timestamp: Date | string; // Allow both Date and string to handle serialization
   icon?: string;
 }
 
@@ -90,8 +90,7 @@ export const useNotificationStore = create<NotificationState>()(
       getUnreadCount: () => {
         const { notifications } = get();
         return notifications.filter(notification => !notification.read).length;
-      }
-    }),
+      }    }),
     {
       name: 'notification-storage',
       partialize: (state) => ({

@@ -92,7 +92,7 @@ class RestaurantAuthService {
   signup = async (data: SignupData): Promise<RestaurantUser> => {
     try {
       const response = await axios.post<LoginResponse>(
-        `${this.baseURL}/auth/register-restaurant-account`,
+        `${this.baseURL}/auth/create-restaurant-account`,
         data,
         {
           headers: {

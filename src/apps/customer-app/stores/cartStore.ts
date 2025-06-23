@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 
 export interface CartItem {
   id: string;
+  originalItemId: string; // Store the original item ID separately
   name: string;
   description: string;
   price: number;
@@ -44,8 +45,8 @@ interface CartState {
   clearCart: () => void;
   getCartTotal: () => number;
   getCartItemCount: () => number;
-  placeOrder: (deliveryAddress: string) => string;
-  getOrderById: (orderId: string) => Order | undefined;  updateOrderStatus: (orderId: string, status: Order['status']) => void;
+  getOrderById: (orderId: string) => Order | undefined;
+  updateOrderStatus: (orderId: string, status: Order['status']) => void;
   updateOrderStatusFromAPI: (orderId: string, newStatus: Order['status'], timestamp?: Date) => void;
   fetchUserOrders: () => Promise<void>;
 }
@@ -104,54 +105,7 @@ export const useCartStore = create<CartState>()(
       getCartItemCount: () => {
         const { items } = get();
         return items.reduce((count, item) => count + item.quantity, 0);
-      },      placeOrder: (deliveryAddress: string): string => {
-        const { items, orders } = get();
-        if (items.length === 0) return '';
-
-        const orderId = `ORD-${Date.now()}`;
-        const orderTime = new Date();
-        const estimatedDelivery = new Date(orderTime.getTime() + 45 * 60 * 1000); // 45 mins
-        const subtotal = get().getCartTotal();
-        const deliveryFee = 2.50;
-        const total = subtotal + deliveryFee;
-
-        // Create new order with PENDING status (default for all new orders)
-        const newOrder: Order = {id: orderId,
-          items: [...items],
-          restaurant: items[0].restaurantName,
-          restaurantId: items[0].restaurantId,
-          status: 'PENDING',
-          orderTime,
-          estimatedDelivery,
-          total,
-          deliveryFee,
-          subtotal,
-          deliveryAddress,
-          trackingSteps: [
-            { status: 'PENDING', time: orderTime, description: 'Order placed successfully', completed: true },
-            { status: 'CONFIRMED', time: new Date(), description: 'Restaurant confirmed your order', completed: false },
-            { status: 'PREPARING', time: new Date(), description: 'Your order is being prepared', completed: false },
-            { status: 'READY', time: new Date(), description: 'Order is ready for pickup', completed: false },
-            { status: 'OUT_FOR_DELIVERY', time: new Date(), description: 'Order is out for delivery', completed: false },
-            { status: 'DELIVERED', time: new Date(), description: 'Order delivered successfully', completed: false }
-          ]
-        };        set({
-          orders: [newOrder, ...orders],
-          items: []
-        });
-
-        // TODO: In production, status updates will come from your backend API
-        // For demo purposes, you can uncomment these lines to simulate status progression:
-        
-        // setTimeout(() => get().updateOrderStatus(orderId, 'CONFIRMED'), 2000);
-        // setTimeout(() => get().updateOrderStatus(orderId, 'PREPARING'), 5000);
-        // setTimeout(() => get().updateOrderStatus(orderId, 'READY'), 10000);
-        // setTimeout(() => get().updateOrderStatus(orderId, 'OUT_FOR_DELIVERY'), 15000);
-
-        return orderId;
-      },
-
-      getOrderById: (orderId: string): Order | undefined => {
+      },      getOrderById: (orderId: string): Order | undefined => {
         const { orders } = get();
         return orders.find(order => order.id === orderId);
       },
@@ -187,68 +141,112 @@ export const useCartStore = create<CartState>()(
 
             return { ...order, status: newStatus, trackingSteps: updatedSteps };
           })
-        }));
-      },
+        }));      },
 
       // Fetch user orders from backend
       fetchUserOrders: async () => {
         try {
+          console.log('🔍 CartStore: Starting fetchUserOrders');
           const { useAuthStore } = await import('./authStore');
-          const { user } = useAuthStore.getState();
+          const { user, token } = useAuthStore.getState();
           
           if (!user?.id) {
-            console.warn('No user ID available for fetching orders');
+            console.warn('❌ CartStore: No user ID available for fetching orders');
             return;
           }
 
-          const { getUserOrders } = await import('../api/orders');
-          const response = await getUserOrders(user.id.toString());
-          
-          if (response && response.orders) {
-            // Transform backend orders to match our Order interface
-            const transformedOrders = response.orders.map((backendOrder: any) => ({
-              id: backendOrder.id.toString(),
-              userId: backendOrder.userId,
-              restaurantId: backendOrder.restaurantId,
-              items: backendOrder.orderItems?.map((item: any) => ({
-                id: item.item.id,
-                name: item.item.name,
-                price: item.item.price,
-                quantity: item.quantity,
-                imageUrl: item.item.imageUrl
-              })) || [],
-              totalPrice: backendOrder.totalPrice,
-              status: backendOrder.status,
-              timestamp: new Date(backendOrder.timestamp),
-              restaurant: backendOrder.restaurant ? {
-                name: backendOrder.restaurant.name,
-                id: backendOrder.restaurant.id
-              } : undefined
-            }));
+          if (!token) {
+            console.warn('❌ CartStore: No authentication token available for fetching orders');
+            return;
+          }
 
+          console.log('🔍 CartStore: Fetching orders for user:', user.id);
+          const { getUserOrders } = await import('../api/orders');
+          const response = await getUserOrders(user.id.toString(), {}, token);
+          
+          console.log('🔍 CartStore: Orders response:', response);
+          
+          if (response && response.orders) {            console.log('🔍 CartStore: Transforming', response.orders.length, 'orders');
+            // Transform backend orders to match our Order interface
+            const transformedOrders = response.orders.map((backendOrder: any) => {
+              console.log('🔍 CartStore: Processing backend order:', backendOrder);
+              
+              // Create tracking steps based on status
+              const createTrackingSteps = (status: string, timestamp: string) => {
+                const orderTime = new Date(timestamp);
+                const allSteps = [
+                  { status: 'PENDING', description: 'Order placed successfully' },
+                  { status: 'CONFIRMED', description: 'Restaurant confirmed your order' },
+                  { status: 'PREPARING', description: 'Your order is being prepared' },
+                  { status: 'READY', description: 'Order is ready for pickup' },
+                  { status: 'OUT_FOR_DELIVERY', description: 'Order is out for delivery' },
+                  { status: 'DELIVERED', description: 'Order delivered successfully' }
+                ];
+
+                return allSteps.map(step => ({
+                  status: step.status,
+                  time: step.status === status ? orderTime : new Date(),
+                  description: step.description,
+                  completed: step.status === status || (
+                    step.status === 'PENDING' || 
+                    (step.status === 'CONFIRMED' && ['PREPARING', 'READY', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(status)) ||
+                    (step.status === 'PREPARING' && ['READY', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(status)) ||
+                    (step.status === 'READY' && ['OUT_FOR_DELIVERY', 'DELIVERED'].includes(status)) ||
+                    (step.status === 'OUT_FOR_DELIVERY' && status === 'DELIVERED')
+                  )
+                }));
+              };              const transformedOrder = {
+                id: backendOrder.id.toString(),
+                items: backendOrder.orderItems?.map((orderItem: any) => {
+                  console.log('🔍 CartStore: Processing order item:', orderItem);
+                  return {
+                    id: orderItem.item?.id?.toString() || orderItem.itemId?.toString() || '',
+                    name: orderItem.item?.name || 'Unknown Item',
+                    description: orderItem.item?.description || '',
+                    price: orderItem.item?.price || 0,
+                    quantity: orderItem.quantity || 1,
+                    restaurantId: backendOrder.restaurantId?.toString() || '',
+                    restaurantName: backendOrder.restaurant?.name || 'Unknown Restaurant',
+                    image: orderItem.item?.imageUrl || '',
+                    category: orderItem.item?.category || ''
+                  };
+                }) || [],
+                restaurant: backendOrder.restaurant?.name || 'Unknown Restaurant',
+                restaurantId: backendOrder.restaurantId?.toString() || '',
+                status: backendOrder.status?.toUpperCase() || 'PENDING',
+                orderTime: new Date(backendOrder.timestamp),
+                estimatedDelivery: new Date(new Date(backendOrder.timestamp).getTime() + 45 * 60 * 1000), // Add 45 mins
+                total: backendOrder.totalPrice || 0,
+                deliveryFee: 2.50, // Default delivery fee
+                subtotal: (backendOrder.totalPrice || 0) - 2.50,deliveryAddress: backendOrder.deliveryAddress || 'No address provided',
+                trackingSteps: createTrackingSteps(backendOrder.status?.toUpperCase() || 'PENDING', backendOrder.timestamp)
+              };
+              
+              console.log('🔍 CartStore: Transformed order:', transformedOrder);
+              return transformedOrder;
+            });
+
+            console.log('✅ CartStore: Setting', transformedOrders.length, 'transformed orders');
             set({ orders: transformedOrders });
+          } else {
+            console.log('❌ CartStore: No orders found in response');
           }
         } catch (error) {
-          console.error('Failed to fetch user orders:', error);
+          console.error('❌ CartStore: Failed to fetch user orders:', error);
+          // Don't clear existing orders on error, just log it
         }
       },
-    }),
-    {
-      name: 'cart-storage',      partialize: (state) => ({
+    }),    {
+      name: 'cart-storage',
+      partialize: (state) => ({
         items: state.items,
-        orders: state.orders
+        // Don't persist orders since we fetch them from the database
+        // orders: state.orders
       }),
       onRehydrateStorage: () => (state) => {
-        if (state?.orders) {
-          state.orders = state.orders.map((order: any) => ({
-            ...order,
-            orderTime: new Date(order.orderTime),
-            estimatedDelivery: order.estimatedDelivery ? new Date(order.estimatedDelivery) : undefined,
-            trackingSteps: order.trackingSteps?.map((step: any) => ({
-              ...step,
-              time: new Date(step.time)
-            })) || []
-          }));
+        // Initialize orders as empty array since we'll fetch from DB
+        if (state) {
+          state.orders = [];
         }
       }
     }

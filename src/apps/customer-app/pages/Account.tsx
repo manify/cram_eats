@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { useCartStore } from '../stores';
+import React, { useState, useEffect } from "react";
+import { useCartStore, useAuthStore } from '../stores';
+import { getUserOrders } from '../api/orders';
 
 import {
   User,
@@ -15,6 +16,7 @@ import {
   Phone,
   Mail,
   Calendar,
+  Loader2,
 } from "lucide-react";
 
 interface StatCardProps {
@@ -69,41 +71,89 @@ const TabButton: React.FC<TabButtonProps> = ({
 
 const Account: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"profile" | "orders" | "settings">("profile");
-  
-  // Initialize user data from memory (simulating logged-in user data)
- const storedUser = localStorage.getItem("user");
-const parsedUser = storedUser ? JSON.parse(storedUser) : null;
-
-const [userData, setUserData] = useState({
-  name: parsedUser?.name || "User",
-  email: parsedUser?.email || "user@example.com",
-  phone: "+33 6 12 34 56 78",
-  addressLine1: "25 Avenue des Mazades",
-  addressLine2: "31200 Toulouse, France",
-});
-
-
-  const userStats = {
-    totalOrders: 47,
-    totalSpent: 342.5,
+  const { user, isAuthenticated } = useAuthStore();
+  const [orders, setOrders] = useState<any[]>([]);
+  const [userStats, setUserStats] = useState({
+    totalOrders: 0,
+    totalSpent: 0,
     avgRating: 4.8,
     memberSince: "January 2023",
+  });
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+  
+  // Get user data from auth store or fallback to localStorage
+  const userData = {
+    name: user ? `${user.firstName} ${user.lastName}` : localStorage.getItem("userName") || "User",
+    email: user?.email || localStorage.getItem("userEmail") || "user@example.com",
+    phone: "+33 6 12 34 56 78", // This could be added to User interface later
+    addressLine1: "25 Avenue des Mazades", // This could be added to User interface later
+    addressLine2: "31200 Toulouse, France", // This could be added to User interface later
   };
 
-  // Sample full order history
-  const orders = [
-    { id: "1", date: "2025-06-10", restaurant: "Pasta House", total: 25.5, status: "Delivered" },
-    { id: "2", date: "2025-06-05", restaurant: "Sushi World", total: 40.0, status: "Delivered" },
-    { id: "3", date: "2025-05-30", restaurant: "Burger Hub", total: 15.75, status: "Cancelled" },
-    { id: "4", date: "2025-05-20", restaurant: "Taco Town", total: 22.3, status: "Delivered" },
-    { id: "5", date: "2025-05-10", restaurant: "Pizza Palace", total: 30.0, status: "Delivered" },
-  ];
+  // Fetch user orders when component mounts
+  useEffect(() => {
+    const fetchUserOrders = async () => {
+      if (!user?.id) return;
 
-  // Editable fields
+      setIsLoadingOrders(true);
+      setOrdersError(null);
+
+      try {
+        const response = await getUserOrders(user.id.toString());
+        
+        if (response && response.orders) {
+          // Transform backend orders to match the expected format
+          const transformedOrders = response.orders.map((order: any) => ({
+            id: order.id.toString(),
+            date: new Date(order.timestamp).toLocaleDateString(),
+            restaurant: order.restaurant?.name || 'Unknown Restaurant',
+            total: order.totalPrice,
+            status: order.status === 'DELIVERED' ? 'Delivered' : 
+                   order.status === 'CANCELLED' ? 'Cancelled' : 'In Progress'
+          }));
+
+          setOrders(transformedOrders);
+
+          // Calculate user stats from real orders
+          const totalOrders = transformedOrders.length;
+          const totalSpent = transformedOrders.reduce((sum: number, order: any) => sum + order.total, 0);
+          const deliveredOrders = transformedOrders.filter((order: any) => order.status === 'Delivered');
+          
+          setUserStats(prev => ({
+            ...prev,
+            totalOrders,
+            totalSpent,
+            // Could calculate actual average rating from order feedback in the future
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch user orders:', error);
+        setOrdersError('Failed to load order history');
+        // Use sample data as fallback
+        setOrders([
+          { id: "1", date: "2025-06-10", restaurant: "Pasta House", total: 25.5, status: "Delivered" },
+          { id: "2", date: "2025-06-05", restaurant: "Sushi World", total: 40.0, status: "Delivered" },
+        ]);
+      } finally {
+        setIsLoadingOrders(false);
+      }
+    };
+
+    fetchUserOrders();
+  }, [user?.id]);  // Editable fields - initialize with current user data
   const [email, setEmail] = useState(userData.email);
   const [phone, setPhone] = useState(userData.phone);
   const [addressLine1, setAddressLine1] = useState(userData.addressLine1);
   const [addressLine2, setAddressLine2] = useState(userData.addressLine2);
+
+  // Update editable fields when user data changes
+  useEffect(() => {
+    setEmail(userData.email);
+    setPhone(userData.phone);
+    setAddressLine1(userData.addressLine1);
+    setAddressLine2(userData.addressLine2);
+  }, [userData.email, userData.phone, userData.addressLine1, userData.addressLine2]);
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
@@ -111,9 +161,9 @@ const [userData, setUserData] = useState({
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  // Extract display name from email or use full name
+  // Extract display name from user data
   const getDisplayName = () => {
-    return userData.name || email.split("@")[0] || "User";
+    return userData.name || "User";
   };
 
   // Handler for saving profile changes
@@ -123,34 +173,26 @@ const [userData, setUserData] = useState({
         setPasswordError("Passwords do not match");
         return;
       }
-      // Password change logic here
+      // TODO: Password change logic here - integrate with auth API
     }
     
-    // Update user data
-    setUserData(prev => ({
-      ...prev,
-      email: email,
-      phone: phone
-    }));
-    
+    // TODO: Update user profile via API
+    // For now, just update local state
     setPasswordError("");
     setIsEditingProfile(false);
     setPassword("");
     setPasswordConfirm("");
-    // API call to save profile info here
+    console.log('Profile update - Email:', email, 'Phone:', phone);
+    // API call to save profile info would go here
   };
 
   // Handler for saving address changes
   const saveAddress = () => {
-    // Update user data
-    setUserData(prev => ({
-      ...prev,
-      addressLine1: addressLine1,
-      addressLine2: addressLine2
-    }));
-    
+    // TODO: Update user address via API
+    // For now, just update local state
     setIsEditingAddress(false);
-    // API call to save address info here
+    console.log('Address update - Line1:', addressLine1, 'Line2:', addressLine2);
+    // API call to save address info would go here
   };
 
   // Handler for delete account action
@@ -181,9 +223,7 @@ const [userData, setUserData] = useState({
               Premium member • since {userStats.memberSince}
             </p>
           </div>
-        </header>
-
-        {/* Stats */}
+        </header>        {/* Stats */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <StatCard
             value={userStats.totalOrders}
@@ -193,7 +233,7 @@ const [userData, setUserData] = useState({
             iconColor="text-blue-600"
           />
           <StatCard
-            value={`€${userStats.totalSpent}`}
+            value={`€${userStats.totalSpent.toFixed(2)}`}
             label="Total Spent"
             iconBg="bg-green-100"
             Icon={CreditCard}
@@ -203,8 +243,7 @@ const [userData, setUserData] = useState({
             value={userStats.avgRating}
             label="Avg Rating"
             iconBg="bg-yellow-100"
-            Icon={Star}
-            iconColor="text-yellow-600"
+            Icon={Star}            iconColor="text-yellow-600"
           />
         </section>
 
@@ -404,41 +443,65 @@ const [userData, setUserData] = useState({
               </ul>
             </div>
           </div>
-        )}
-
-        {activeTab === "orders" && (
+        )}        {activeTab === "orders" && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
             <h3 className="font-semibold text-gray-900 mb-4">Order History</h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="px-4 py-2 text-left font-semibold text-gray-700">Date</th>
-                    <th className="px-4 py-2 text-left font-semibold text-gray-700">Restaurant</th>
-                    <th className="px-4 py-2 text-left font-semibold text-gray-700">Total</th>
-                    <th className="px-4 py-2 text-left font-semibold text-gray-700">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orders.map(order => (
-                    <tr key={order.id} className="border-b">
-                      <td className="px-4 py-2">{order.date}</td>
-                      <td className="px-4 py-2">{order.restaurant}</td>
-                      <td className="px-4 py-2">€{order.total.toFixed(2)}</td>
-                      <td className="px-4 py-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          order.status === "Delivered"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}>
-                          {order.status}
-                        </span>
-                      </td>
+            
+            {isLoadingOrders ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-500" />
+                <span className="ml-2 text-gray-500">Loading orders...</span>
+              </div>
+            ) : ordersError ? (
+              <div className="text-center py-8">
+                <p className="text-red-600 mb-4">{ordersError}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="text-center py-8">
+                <Gift className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No orders found</p>
+                <p className="text-sm text-gray-400 mt-1">Your order history will appear here</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="px-4 py-2 text-left font-semibold text-gray-700">Date</th>
+                      <th className="px-4 py-2 text-left font-semibold text-gray-700">Restaurant</th>
+                      <th className="px-4 py-2 text-left font-semibold text-gray-700">Total</th>
+                      <th className="px-4 py-2 text-left font-semibold text-gray-700">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {orders.map(order => (
+                      <tr key={order.id} className="border-b">
+                        <td className="px-4 py-2">{order.date}</td>
+                        <td className="px-4 py-2">{order.restaurant}</td>
+                        <td className="px-4 py-2">€{order.total.toFixed(2)}</td>
+                        <td className="px-4 py-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            order.status === "Delivered"
+                              ? "bg-green-100 text-green-700"
+                              : order.status === "Cancelled"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}>
+                            {order.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
