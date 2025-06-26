@@ -19,9 +19,9 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
     name: '',
     description: '',
     price: '',
-    category: 'mains' as MenuItem['category'],
-
-    isAvailable: true
+    category: '',
+    status: 'available' as 'available' | 'unavailable',
+    imageUrl: ''
   });
 
   // Add effect to handle initialData
@@ -32,8 +32,8 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
         description: initialData.description,
         price: initialData.price.toString(),
         category: initialData.category,
-
-        isAvailable: initialData.isAvailable
+        status: initialData.status,
+        imageUrl: initialData.imageUrl || ''
       });
     } else {
       // Reset form when not editing
@@ -41,9 +41,9 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
         name: '',
         description: '',
         price: '',
-        category: 'mains',
-
-        isAvailable: true
+        category: '',
+        status: 'available',
+        imageUrl: ''
       });
     }
   }, [initialData]);
@@ -61,8 +61,9 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
       name: '',
       description: '',
       price: '',
-      category: 'mains',
-      isAvailable: true
+      category: '',
+      status: 'available',
+      imageUrl: ''
     });
 };
 
@@ -124,35 +125,51 @@ const AddItemModal: React.FC<AddItemModalProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Category
             </label>
-            <select
+            <input
+              type="text"
+              required
               value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value as MenuItem['category'] })}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              placeholder="e.g., Pizza, Pasta, Appetizers"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Status
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value as 'available' | 'unavailable' })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
             >
-              <option value="starters">Starters</option>
-              <option value="mains">Mains</option>
-              <option value="desserts">Desserts</option>
-              <option value="beverages">Beverages</option>
+              <option value="available">Available</option>
+              <option value="unavailable">Unavailable</option>
             </select>
           </div>
 
-          {/* <div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Image URL
             </label>
             <input
               type="url"
-              value={formData.image}
-              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+              value={formData.imageUrl}
+              onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              placeholder="https://example.com/image.jpg"
             />
-          </div> */}
+          </div>
 
           <div className="pt-4">
-  <button type="submit" className="bg-yellow-500 text-white px-4 py-2 rounded-lg">
-    Add
-  </button>
-</div>
+            <button 
+              type="submit" 
+              className="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+            >
+              {initialData ? 'Update Item' : 'Add Item'}
+            </button>
+          </div>
         </form>
       </div>
     </div>

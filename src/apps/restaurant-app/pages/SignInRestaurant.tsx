@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { restaurantAuth } from "../api/Auth/restaurantAuth";
+import { useRestaurantAuth } from "../hooks/useRestaurantAuth";
 
 import Layout from "../../customer-app/components/ui/Layout";
 import { InputField } from "../../customer-app/components/ui/input";
@@ -21,31 +21,40 @@ function LoginHeader() {
 
 const SignInRestaurant: React.FC = () => {
   const navigate = useNavigate();
+  const { login, loading, error: authError, isAuthenticated } = useRestaurantAuth();
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/restaurantdashboard", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    setIsLoading(true);
     setError("");
 
     try {
-      await restaurantAuth.login({ email, password });
-      if (rememberMe) {
-        localStorage.setItem("rememberedRestaurantEmail", email);
+      const result = await login(email, password);
+      
+      if (result.success) {
+        if (rememberMe) {
+          localStorage.setItem("rememberedRestaurantEmail", email);
+        } else {
+          localStorage.removeItem("rememberedRestaurantEmail");
+        }
+        navigate("/restaurantdashboard", { replace: true });
       } else {
-        localStorage.removeItem("rememberedRestaurantEmail");
+        setError(result.error || "Login failed");
       }
-      navigate("/restaurantdashboard", { replace: true });
     } catch (err: any) {
-      // Log the error for debugging
       console.error("Login error:", err);
       setError(err?.message || "Invalid credentials");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -71,9 +80,9 @@ const SignInRestaurant: React.FC = () => {
             onSubmit={handleSubmit}
             className="px-56 pt-9 pb-0 max-md:px-10 max-md:pt-9 max-md:pb-0 max-sm:px-5 max-sm:pt-6 max-sm:pb-0"
           >
-            {error && (
+            {(error || authError) && (
               <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                {error}
+                {error || authError}
               </div>
             )}
 
@@ -101,7 +110,7 @@ const SignInRestaurant: React.FC = () => {
 
             <SignInButton
               onClick={handleSubmit}
-              disabled={!email || !password || isLoading}
+              disabled={!email || !password || loading}
             />
           </form>
 

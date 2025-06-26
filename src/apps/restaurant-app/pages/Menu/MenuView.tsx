@@ -105,9 +105,9 @@ const MenuView: React.FC = () => {
               key={item.id}
               className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-200"
             >
-              {item.image && (
+              {item.imageUrl && (
                 <img
-                  src={item.image}
+                  src={item.imageUrl}
                   alt={item.name}
                   className="w-full h-48 object-cover"
                 />
@@ -131,12 +131,12 @@ const MenuView: React.FC = () => {
                 <div className="flex justify-between items-center">
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      item.isAvailable
+                      item.status === 'available'
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
                     }`}
                   >
-                    {item.isAvailable ? 'Available' : 'Unavailable'}
+                    {item.status === 'available' ? 'Available' : 'Unavailable'}
                   </span>
                   <button
                     onClick={() => setEditingItem(item)}

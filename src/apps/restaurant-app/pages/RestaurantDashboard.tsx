@@ -10,6 +10,10 @@ import MenuView from './Menu/MenuViewWithProps';
 import ProfileSettings from '../components/ProfileSettings';
 import { Deal } from '../types/Deal';
 import { MenuItem } from '../types/Menu';
+import { RestaurantData, RestaurantMenuItem } from '../types/RestaurantApi';
+import DebugInfo from '../components/DebugInfo';
+import RestaurantDebugPanel from '../components/RestaurantDebugPanel';
+import { useRestaurantAuth } from '../hooks/useRestaurantAuth';
 
 interface RestaurantProfile {
   name: string;
@@ -25,12 +29,15 @@ interface RestaurantProfile {
 
 export const RestaurantDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { restaurantId, token, isAuthenticated, user, initializeAuth, signOut } = useRestaurantAuth();
+  
   const [currentView, setCurrentView] = useState<'dashboard' | 'orders' | 'menu' | 'items' | 'reviews' | 'stats' | 'account'>('dashboard');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMenu, setLoadingMenu] = useState(false);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [restaurantData, setRestaurantData] = useState<RestaurantData | null>(null);
   const [profile, setProfile] = useState<RestaurantProfile>({
     name: 'Your Restaurant Name',
     description: 'A brief description of your restaurant',
@@ -43,67 +50,145 @@ export const RestaurantDashboard: React.FC = () => {
     isOpen: true,
   });
 
-  const restaurantId = localStorage.getItem('restaurantId');
-
-  // Fetch orders from backend
+  // Initialize auth on component mount
   useEffect(() => {
-    const fetchOrders = async () => {
-      if (!restaurantId) return;
-      
-      try {
-        setLoading(true);
-        const response = await axios.get(
-          `http://localhost:3030/crameats/orders/restaurant/${restaurantId}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('restaurantToken')}`,
-            },
-          }
-        );
-        
-        if (response.data && response.data.orders) {
-          setOrders(response.data.orders);
-        }
-      } catch (error) {
-        console.error('Failed to fetch orders:', error);
-        setOrders([]);
-      } finally {
-        setLoading(false);
+    initializeAuth();
+  }, [initializeAuth]);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !token) {
+      navigate('/restaurantsignin');
+    }
+  }, [isAuthenticated, token, navigate]);
+
+  // Fetch restaurant data, orders, and menu items from backend
+  useEffect(() => {
+    const fetchRestaurantData = async () => {
+      if (!restaurantId) {
+        console.error('No restaurant ID found');
+        return;
       }
-    };
-
-    fetchOrders();
-  }, [restaurantId]);
-
-  // Fetch menu items from backend
-  useEffect(() => {
-    const fetchMenuItems = async () => {
-      if (!restaurantId) return;
       
       try {
         setLoadingMenu(true);
+        console.log('Fetching restaurant data for ID:', restaurantId);
+        
         const response = await axios.get(
-          `http://localhost:3030/crameats/menus/restaurant/${restaurantId}`,
+          `http://localhost:3030/crameats/restaurants/${restaurantId}`,
           {
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem('restaurantToken')}`,
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
             },
           }
         );
         
-        if (response.data && response.data.menus) {
-          const allItems = response.data.menus.flatMap((menu: any) => menu.items || []);
+        console.log('Restaurant data response:', response.data);
+        
+        if (response.data) {
+          setRestaurantData(response.data);
+          
+          // Extract menu items from the complex structure
+          const allItems: MenuItem[] = [];
+          if (response.data.menu && Array.isArray(response.data.menu)) {
+            response.data.menu.forEach((menu: any) => {
+              if (menu.items && Array.isArray(menu.items)) {
+                menu.items.forEach((menuItem: any) => {
+                  const item = menuItem.item;
+                  if (item) {
+                    allItems.push({
+                      id: item.id.toString(),
+                      name: item.name,
+                      description: item.description || '',
+                      price: item.price,
+                      category: item.category || 'uncategorized',
+                      status: item.status,
+                      imageUrl: item.imageUrl,
+                      restaurantId: item.restaurantId
+                    });
+                  }
+                });
+              }
+            });
+          }
+          
+          console.log('Extracted menu items:', allItems);
           setMenuItems(allItems);
+          
+          // Update profile with restaurant data
+          setProfile(prev => ({
+            ...prev,
+            name: response.data.name,
+            email: response.data.user?.email || prev.email,
+          }));
         }
       } catch (error) {
-        console.error('Failed to fetch menu items:', error);
+        console.error('Failed to fetch restaurant data:', error);
+        if (axios.isAxiosError(error)) {
+          console.error('Status:', error.response?.status);
+          console.error('Data:', error.response?.data);
+          
+          if (error.response?.status === 404) {
+            console.error(`Restaurant with ID ${restaurantId} not found`);
+          }
+        }
         setMenuItems([]);
       } finally {
         setLoadingMenu(false);
       }
     };
 
-    fetchMenuItems();
+    const fetchOrders = async () => {
+      if (!restaurantId) {
+        console.error('No restaurant ID found for orders');
+        return;
+      }
+      
+      try {
+        setLoading(true);
+        console.log('Fetching orders for restaurant ID:', restaurantId);
+        
+        const response = await axios.get(
+          `http://localhost:3030/crameats/orders/restaurant/${restaurantId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        
+        console.log('Orders response:', response.data);
+        
+        if (response.data && response.data.orders) {
+          setOrders(response.data.orders);
+        } else if (response.data) {
+          // Handle different response structures
+          setOrders(Array.isArray(response.data) ? response.data : []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch orders:', error);
+        if (axios.isAxiosError(error)) {
+          console.error('Orders API Status:', error.response?.status);
+          console.error('Orders API Data:', error.response?.data);
+          
+          if (error.response?.status === 404) {
+            console.error(`No orders found for restaurant ID ${restaurantId} or endpoint doesn't exist`);
+          }
+        }
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (restaurantId) {
+      fetchRestaurantData();
+      fetchOrders();
+    } else {
+      console.error('Restaurant ID not found in localStorage');
+    }
   }, [restaurantId]);
 
   // Handlers for dashboard operations
@@ -118,11 +203,12 @@ export const RestaurantDashboard: React.FC = () => {
   const handleUpdateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
     try {
       await axios.patch(
-        `http://localhost:3030/crameats/orders/${orderId}/status`,
+        `http://localhost:3000/api/orders/${orderId}/status`,
         { status: newStatus },
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('restaurantToken')}`,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
           },
         }
       );
@@ -138,27 +224,61 @@ export const RestaurantDashboard: React.FC = () => {
 
   // Add menu item
   const handleAddMenuItem = async (newItem: MenuItem) => {
-    if (!restaurantId) return;
+    if (!restaurantId) {
+      console.error('No restaurant ID found for adding item');
+      return;
+    }
 
     try {
-      const response = await axios.post(
+      console.log('Adding new item:', newItem);
+      
+      // First create the item
+      const itemResponse = await axios.post(
         `http://localhost:3030/crameats/items`,
         {
-          ...newItem,
-          restaurantId: parseInt(restaurantId)
+          itemId: `item-${Date.now()}`, // Generate unique itemId
+          name: newItem.name,
+          description: newItem.description,
+          price: newItem.price,
+          category: newItem.category,
+          status: newItem.status || 'available',
+          imageUrl: newItem.imageUrl || '',
+          restaurantId: restaurantId
         },
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('restaurantToken')}`,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
           },
         }
       );
       
-      if (response.data) {
-        setMenuItems(prev => [...prev, response.data]);
+      console.log('Item creation response:', itemResponse.data);
+      
+      if (itemResponse.data) {
+        // Add to local state
+        const formattedItem: MenuItem = {
+          id: itemResponse.data.id.toString(),
+          name: itemResponse.data.name,
+          description: itemResponse.data.description || '',
+          price: itemResponse.data.price,
+          category: itemResponse.data.category,
+          status: itemResponse.data.status,
+          imageUrl: itemResponse.data.imageUrl,
+          restaurantId: itemResponse.data.restaurantId
+        };
+        setMenuItems(prev => [...prev, formattedItem]);
       }
     } catch (error) {
       console.error('Failed to add menu item:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Add item API Status:', error.response?.status);
+        console.error('Add item API Data:', error.response?.data);
+        
+        if (error.response?.status === 404) {
+          console.error('Items endpoint not found. Check if the API route exists.');
+        }
+      }
     }
   };
 
@@ -167,10 +287,18 @@ export const RestaurantDashboard: React.FC = () => {
     try {
       await axios.put(
         `http://localhost:3030/crameats/items/${editedItem.id}`,
-        editedItem,
+        {
+          name: editedItem.name,
+          description: editedItem.description,
+          price: editedItem.price,
+          category: editedItem.category,
+          status: editedItem.status,
+          imageUrl: editedItem.imageUrl
+        },
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('restaurantToken')}`,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
           },
         }
       );
@@ -188,23 +316,26 @@ export const RestaurantDashboard: React.FC = () => {
     const item = menuItems.find(i => i.id === id);
     if (!item) return;
     
+    const newStatus = item.status === 'available' ? 'unavailable' : 'available';
+    
     try {
       await axios.put(
         `http://localhost:3030/crameats/items/${id}`,
         {
           ...item,
-          isAvailable: !item.isAvailable
+          status: newStatus
         },
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('restaurantToken')}`,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
           },
         }
       );
       
       setMenuItems(prev =>
         prev.map(i =>
-          i.id === id ? { ...i, isAvailable: !i.isAvailable } : i
+          i.id === id ? { ...i, status: newStatus } : i
         )
       );
     } catch (error) {
@@ -219,7 +350,8 @@ export const RestaurantDashboard: React.FC = () => {
         `http://localhost:3030/crameats/items/${itemId}`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('restaurantToken')}`,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
           },
         }
       );
@@ -239,9 +371,7 @@ export const RestaurantDashboard: React.FC = () => {
   const handleRemoveDeal = async (dealId: string) =>
     setDeals(prev => prev.filter(deal => deal.id !== dealId));
   const handleLogout = () => {
-    localStorage.removeItem('restaurantToken');
-    localStorage.removeItem('restaurantUser');
-    localStorage.removeItem('restaurantId');
+    signOut();
     navigate('/restaurantsignin');
   };
 
@@ -395,6 +525,15 @@ export const RestaurantDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      <DebugInfo
+        restaurantId={restaurantId}
+        loading={loading}
+        loadingMenu={loadingMenu}
+        menuItems={menuItems}
+        orders={orders}
+        restaurantData={restaurantData}
+      />
+      <RestaurantDebugPanel />
     </div>
   );
 };

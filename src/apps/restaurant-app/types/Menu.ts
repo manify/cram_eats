@@ -3,7 +3,8 @@ export interface MenuItem {
   name: string;
   description: string;
   price: number;
-  category: 'starters' | 'mains' | 'desserts' | 'beverages';
-  image?: string;
-  isAvailable: boolean;
+  category: string;
+  status: 'available' | 'unavailable';
+  imageUrl?: string;
+  restaurantId?: number;
 }

@@ -176,9 +176,15 @@ export const RestaurantDashboard: React.FC<RestaurantDashboardProps> = () => {
     if (!item) return;
 
     try {
-      const updatedItem = { ...item, isAvailable: !item.isAvailable };
-      await axios.patch(`http://localhost:3030/crameats/items/${itemId}`, {
-        isAvailable: updatedItem.isAvailable
+      const newStatus: 'available' | 'unavailable' = item.status === 'available' ? 'unavailable' : 'available';
+      const updatedItem: MenuItem = { ...item, status: newStatus };
+      await axios.patch(`http://localhost:3000/api/restaurants/${restaurantId}/items/${itemId}`, {
+        status: newStatus
+      }, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('restaurantToken')}`,
+          'Content-Type': 'application/json',
+        },
       });
       setMenuItems(prev =>
         prev.map(i =>
